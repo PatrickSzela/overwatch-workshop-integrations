@@ -2,8 +2,8 @@
 
 A proof-of-concept application enabling control of Custom Games from external sources
 
-> > [!NOTE]
-> > This application is still in very early stages of development
+> [!NOTE]
+> This application is still in very early stages of development
 
 ### Currently supported integrations:
 

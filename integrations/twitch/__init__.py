@@ -32,6 +32,7 @@ class TwitchIntegration(IIntegration):
         self._me: TwitchUser = None
 
         self._poll: Poll = None
+        self._room_id_cache: dict[str, str] = {}
 
         self._loop = asyncio.get_event_loop()
 
@@ -104,8 +105,19 @@ class TwitchIntegration(IIntegration):
         if not len(args) or not len(cmd.parameter.strip()):
             # no choice
             return
+        
+        # in shared chat, get name of the streamer in which the msg was sent in
+        if cmd.source_room_id:
+            if cmd.source_room_id not in self._room_id_cache:
+                channel = await self._twitch.get_channel_information(cmd.source_room_id)
+                channel = channel[0].broadcaster_login
+                self._room_id_cache[cmd.source_room_id] = channel
 
-        self._poll.add_vote(args[0], cmd.user.name, cmd.room.name)
+            channel = self._room_id_cache[cmd.source_room_id]
+        else:
+            channel = self._channel
+        
+        self._poll.add_vote(args[0], cmd.user.name, channel)
 
     def start_poll(self, choices: list[str], timeout: int = 30):
         if self._poll:

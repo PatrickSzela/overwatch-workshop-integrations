@@ -248,7 +248,9 @@ class OWTP:
                     "Item passed to the messages queue must be of `Message` type"
                 )
 
-            logger.info(f"Starting sending message `{message.name}` with data `{message.args}`")
+            logger.info(
+                f"Starting sending message `{message.name}` with data `{message.args}`"
+            )
             message.state = MessageState.SENDING
             self.on_message_started_sending(message)
 
@@ -326,9 +328,12 @@ class OWTP:
             await asyncio.sleep(DELAY_BEFORE_NEXT_INPUTS)
 
     async def _send_confirmation(self, message: Message):
-        await input.send_input(
-            ReservedPackets.START_END_CONFIRM.value, DELAY_BETWEEN_DOWN_AND_UP_BUTTONS
-        )
+        for _ in range(2):
+            await input.send_input(
+                ReservedPackets.START_END_CONFIRM.value,
+                DELAY_BETWEEN_DOWN_AND_UP_BUTTONS,
+            )
+            await asyncio.sleep(DELAY_BEFORE_NEXT_INPUTS)
 
     async def _wait_for_response(
         self,

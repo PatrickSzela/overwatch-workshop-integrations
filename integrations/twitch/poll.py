@@ -23,6 +23,7 @@ class Poll:
                 raise IndexError()
         except BaseException as e:
             info(f"casted an invalid vote `{vote}` - {repr(e)}")
+            return
 
         if voter in self._voters:
             info(f"tried to vote multiple times")

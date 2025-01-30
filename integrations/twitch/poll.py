@@ -12,12 +12,12 @@ class Poll:
         self._voters: list[str] = []
         self._winner: int = None
 
-    def add_vote(self, vote: int, voter: str, channel: str = None):
+    def add_vote(self, vote: str, voter: str, channel: str = None):
         def info(text: str):
             logger.info(f"{voter} (in {channel}'s chat) {text}")
 
         try:
-            vote = int(vote)
+            vote = int(vote.strip())
 
             if vote > len(self._choices) or vote <= 0:
                 raise IndexError()

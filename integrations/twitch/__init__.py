@@ -72,6 +72,7 @@ class TwitchIntegration(IIntegration):
         self._chat = await Chat(self._twitch, no_shared_chat_messages=False)
 
         self._chat.register_event(ChatEvent.READY, self._on_ready)
+        self._chat.register_event(ChatEvent.MESSAGE, self._on_message)
         self._chat.register_command("vote", self._on_vote)
 
         self._chat.start()
@@ -96,28 +97,39 @@ class TwitchIntegration(IIntegration):
 
         await self.send_message_in_chat(f"{BOT_TITLE}, reporting for duty! o7")
 
-    async def _on_vote(self, cmd: ChatCommand):
-        if not self._poll:
+    async def _on_message(self, data: EventData):
+        if not isinstance(data, ChatMessage):
             return
 
+        # possible vote
+        if data.text.strip().isnumeric() and self._poll:
+            await self._handle_vote(data.text, data.user.name, data.source_room_id)
+
+    async def _on_vote(self, cmd: ChatCommand):
         args = cmd.parameter.split(" ")
 
         if not len(args) or not len(cmd.parameter.strip()):
             # no choice
             return
-        
-        # in shared chat, get name of the streamer in which the msg was sent in
-        if cmd.source_room_id:
-            if cmd.source_room_id not in self._room_id_cache:
-                channel = await self._twitch.get_channel_information(cmd.source_room_id)
-                channel = channel[0].broadcaster_login
-                self._room_id_cache[cmd.source_room_id] = channel
 
-            channel = self._room_id_cache[cmd.source_room_id]
+        await self._handle_vote(args[0], cmd.user.name, cmd.source_room_id)
+
+    async def _handle_vote(self, vote: str, voter: str, source_room_id: any):
+        if not self._poll:
+            return
+
+        # in shared chat, get name of the streamer in which the msg was sent in
+        if source_room_id:
+            if source_room_id not in self._room_id_cache:
+                channel = await self._twitch.get_channel_information(source_room_id)
+                channel = channel[0].broadcaster_login
+                self._room_id_cache[source_room_id] = channel
+
+            channel = self._room_id_cache[source_room_id]
         else:
             channel = self._channel
-        
-        self._poll.add_vote(args[0], cmd.user.name, channel)
+
+        self._poll.add_vote(vote, voter, channel)
 
     def start_poll(self, choices: list[str], timeout: int = 30):
         if self._poll:
@@ -128,7 +140,7 @@ class TwitchIntegration(IIntegration):
         choices = " | ".join(self._poll.choices_str)
 
         self.send_message_in_chat_nowait(
-            f'New poll has started! Cast your vote by typing "!vote <choice>", where <choice> is the number corresponding to your choice: {choices}. Voting will end in {timeout} in-game seconds.'
+            f"New poll has started! Cast your vote by typing the number corresponding to your choice in chat: {choices}. Voting will end in {timeout} in-game seconds."
         )
 
     def end_poll(self):

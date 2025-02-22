@@ -11,15 +11,13 @@ A proof-of-concept application enabling control of Custom Games from external so
 
 ## Requirements
 
-> [!WARNING]
-> Starting with Season 11, the _Enable Workshop Inspector Log File_ setting has been removed. If you haven't enabled it before Season 11 release, **you won't be able to use this application**
-
 - PC with Windows or Linux operating system
 - Python 3.13 or higher installed
-- Overwatch account with both _Enable Workshop Inspector_ and _Enable Workshop Inspector Log File_ enabled
 - Good knowledge of Python and virtual environments
+- Overwatch account with both _Enable Workshop Inspector_ and _Enable Workshop Inspector Log File_ enabled in Options (under _Gameplay_ → _General_ → _Custom Games - Workshop_)
 - Having an Overwatch client continuously focused after starting a Custom Game and not interacting with it
-- Being an **owner** and **spectator** of the Custom Game lobby, and having properly set your keybinds (under Controls -> Spectate):
+- Being an **owner** and **spectator** of the Custom Game lobby
+- Having properly set your keybinds (under _Controls_ → _Spectate_):
 
 | Section         | Name                    | Keybind                             |
 | --------------- | ----------------------- | ----------------------------------- |

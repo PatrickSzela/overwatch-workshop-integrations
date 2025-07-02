@@ -15,8 +15,8 @@ A proof-of-concept application enabling control of Custom Games from external so
 - Python 3.13 or higher installed
 - Good knowledge of Python and virtual environments
 - Overwatch account with both _Enable Workshop Inspector_ and _Enable Workshop Inspector Log File_ enabled in Options (under _Gameplay_ → _General_ → _Custom Games - Workshop_)
-- Having an Overwatch client continuously focused after starting a Custom Game and not interacting with it
-- Being an **owner** and **spectator** of the Custom Game lobby
+- Being a **host (owner)** and **spectator** of the Custom Game lobby
+- Having the Overwatch client continuously focused after starting a Custom Game, not interacting with your PC and not being in any menu
 - Having properly set your keybinds (under _Controls_ → _Spectate_):
 
 | Section         | Name                    | Keybind                             |
@@ -77,3 +77,37 @@ To receive information from the game and forward it to an external service, this
 The application automatically detects when the log file is being created, modified and closed. Once a log file is created, the application will start monitoring it for any changes. Creation of the log file also means that the Custom Game has started. Once the Custom Game finishes or is restarted, the game's client closes the log file.
 
 More information about how it works will be provided in the future.
+
+## FAQ
+
+### I want to host and play with my community a mode that utilizes this application
+
+Unfortunately, there's no easy solution for that. Because the app requires the lobby's host to be a spectator and they must not be interacting with their PC after the game starts, it's not possible for them to play that mode. You could either use an alternative Overwatch account on a separate PC to host the lobby, or ask a trusted member of your community to do that for you.
+
+### Does every player in the lobby needs to install this application?
+
+No, only the host of the lobby needs to use it.
+
+### I want to host a Custom Game that utilizes this app and use my PC in the meantime
+
+Unfortunately that's not possible.
+
+### I want to host a Custom Game that utilizes this app and talk in Twitch chat in the meantime
+
+Unfortunately that's not possible, at least not from the PC that's used to host the Custom Game. You must use a different device to talk in Twitch chat.
+
+### I want to pause the game after starting the mode
+
+Because there's no way for the app to know when the game is paused or not, you can only pause it when application isn't sending any inputs to the game (see output in the console to know when that's happening). Otherwise the app will keep trying (and failing) to send them.
+
+### Sometimes the bot's messages don't show up in chat
+
+To combat spam, Twitch limits how quickly users can send messages in chat, which can sometimes cause bot's messages to not show up in chat, especially if the user whose account is being used for a bot is also sending messages from a different device. To workaround that, make sure that the account that's being used for a bot has (at least) a VIP status in your chat.
+
+### I want to make my own Workshop mode that utilizes this application
+
+The app is still in very early stages of development and there might be changes to how the bridge works in the future, requiring you to update your mode. Additionally, testing the integration is very difficult because of how the bridge works. For these reasons, I personally wouldn't recommend making your own modes that utilize this application, at least not until I release a stable version.
+
+### Can I get banned for using this application?
+
+I can't get a definitive answer to this question, but the chances of that happening are very low. I've personally hosted Custom Game lobbies in the past that utilized this application (shoutout to KarQ), and my account is still in a good standing. Just to be safe, make sure to close this app once you've finished hosting the Custom Game.

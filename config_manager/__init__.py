@@ -1,6 +1,7 @@
 import os
 import json
 from logger import create_logger
+from typing import Any
 
 logger = create_logger("ConfigManager")
 
@@ -20,10 +21,9 @@ class Config:
 
         self._has_unsaved_changes: bool = False
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name: str, value: Any):
         if (
-            isinstance(name, str)
-            and not name.startswith("_")
+            not name.startswith("_")
             and hasattr(self, name)
             and getattr(self, name) != value
         ):
@@ -48,7 +48,7 @@ class Config:
                     setattr(self, key, config[key])
 
                 self._has_unsaved_changes = False
-                logger.info(f"Config loaded!")
+                logger.info("Config loaded!")
             except BaseException:
                 logger.warning("Failed while loading config file!")
 

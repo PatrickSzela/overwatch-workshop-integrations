@@ -6,7 +6,7 @@ from .windows_keyboard_mouse import KeyboardMouse
 
 logger = create_logger("Inputs")
 
-input: IInput = None
+input: IInput
 
 if Ydotool.is_supported():
     input = Ydotool()

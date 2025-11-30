@@ -10,7 +10,7 @@ logger = create_logger("LogWatcher")
 class WorkshopLogWatcher(TextFileWatcher):
     def __init__(
         self,
-        directory,
+        directory: str,
         loop: asyncio.AbstractEventLoop,
         on_log_created: Callable[[str], None],
         on_workshop_output: Callable[[list[str]], None],
@@ -18,23 +18,20 @@ class WorkshopLogWatcher(TextFileWatcher):
     ):
         self._loop = loop
 
-        if on_log_created:
-            async def _(path):
-                on_log_created(path)
+        async def _(path: str):
+            on_log_created(path)
 
-            self.on_log_created = _
+        self.on_log_created = _
 
-        if on_workshop_output:
-            async def _(lines):
-                on_workshop_output(lines)
+        async def _(lines: list[str]):
+            on_workshop_output(lines)
 
-            self.on_workshop_output = _
+        self.on_workshop_output = _
 
-        if on_log_closed:
-            async def _(path):
-                on_log_closed(path)
+        async def _(path: str):
+            on_log_closed(path)
 
-            self.on_log_closed = _
+        self.on_log_closed = _
 
         if not os.path.isdir(directory):
             raise NotADirectoryError(
@@ -48,23 +45,23 @@ class WorkshopLogWatcher(TextFileWatcher):
 
         super().__init__(directory)
 
-    def on_file_created(self, path):
+    def on_file_created(self, path: str):
         asyncio.run_coroutine_threadsafe(self.on_log_created(path), self._loop)
         # self.on_log_created(path)
 
-    def on_new_file_content(self, lines):
+    def on_new_file_content(self, lines: list[str]):
         asyncio.run_coroutine_threadsafe(self.on_workshop_output(lines), self._loop)
         # self.on_workshop_output(lines)
 
-    def on_file_closed(self, path):
+    def on_file_closed(self, path: str):
         asyncio.run_coroutine_threadsafe(self.on_log_closed(path), self._loop)
         # self.on_log_closed(path)
 
     async def on_log_created(self, path: str):
-        logger.warning(f"Unimplemented `on_log_created`")
+        logger.warning("Unimplemented `on_log_created`")
 
     async def on_workshop_output(self, lines: list[str]):
-        logger.warning(f"Unimplemented `on_log_closed`")
+        logger.warning("Unimplemented `on_log_closed`")
 
     async def on_log_closed(self, path: str):
-        logger.warning(f"Unimplemented `on_workshop_output`")
+        logger.warning("Unimplemented `on_workshop_output`")

@@ -10,26 +10,26 @@ class Poll:
 
         self._votes: list[int] = [0] * len(choices)
         self._voters: list[str] = []
-        self._winner: int = None
+        self._winner: int | None = None
 
-    def add_vote(self, vote: str, voter: str, channel: str = None):
+    def add_vote(self, vote: str, voter: str, channel: str | None = None):
         def info(text: str):
             logger.info(f"{voter} (in {channel}'s chat) {text}")
 
         try:
-            vote = int(vote.strip())
+            val = int(vote.strip())
 
-            if vote > len(self._choices) or vote <= 0:
+            if val > len(self._choices) or val <= 0:
                 raise IndexError()
         except BaseException as e:
             info(f"casted an invalid vote `{vote}` - {repr(e)}")
             return
 
         if voter in self._voters:
-            info(f"tried to vote multiple times")
+            info("tried to vote multiple times")
             return
 
-        idx = vote - 1
+        idx = val - 1
         self._votes[idx] += 1
         self._voters.append(voter)
 

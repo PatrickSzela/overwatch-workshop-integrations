@@ -20,7 +20,7 @@ logging.basicConfig(
 )
 
 
-def create_logger(name):
+def create_logger(name: str):
     logger = logging.getLogger(name)
 
     # if logger.hasHandlers():

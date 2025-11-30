@@ -1,6 +1,8 @@
 import random
+from typing import Any
 from overwatch import GameState
 from overwatch.integration import IIntegration
+from owtp.message import Message
 
 
 class Test(IIntegration):
@@ -8,6 +10,9 @@ class Test(IIntegration):
         super().__init__()
 
     def on_connect(self):
+        if not self.connection:
+            raise RuntimeError("No connection")
+        
         print("Successfully established connection with the Workshop mode!")
 
         # TODO: remove
@@ -29,10 +34,13 @@ class Test(IIntegration):
     def on_error(self):
         print("Failed to connect with the Workshop mode!")
 
-    def on_message_error(self, message):
+    def on_message_error(self, message: Message):
         print(f"Failed to send message `{message.name}`")
 
-    def on_game_state_change(self, state):
+    def on_game_state_change(self, state: GameState):
+        if not self.overwatch:
+            raise RuntimeError("No Overwatch instance")
+        
         match state:
             case GameState.STARTED:
                 print(
@@ -46,9 +54,14 @@ class Test(IIntegration):
                 print("Game has been finished")
             case GameState.CLOSED:
                 print("Lobby has been closed")
+            case _:
+                pass
 
-    def on_message(self, type, data):
-        match type:
+    def on_message(self, name: str, data: dict[str, Any]):
+        if not self.connection:
+            raise RuntimeError("No connection")
+        
+        match name:
             case "POLL_START":
                 timeout, choices = data["timeout"], data["choices"]
                 print(
@@ -71,5 +84,5 @@ class Test(IIntegration):
             case "SEND_MESSAGE":
                 print(data["message"])
 
-    def on_message_error(self, message):
-        print(f"Failed sending message {message.name}")
+            case _:
+                pass

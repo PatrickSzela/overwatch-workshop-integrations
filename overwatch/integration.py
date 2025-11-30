@@ -1,32 +1,37 @@
 from enum import StrEnum
+from typing import Any
 from owtp.message import Message
 from owtp.message_structure import MessageStructure
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from overwatch import Overwatch
 
 
 class GameState(StrEnum):
     # TODO: add assembling heroes & in setup (how to handle control mode & competitive?)
-    NONE = ("NONE",)
-    STARTED = ("GAME_STARTED",)
-    IN_PROGRESS = ("GAME_IN_PROGRESS",)
-    IN_BETWEEN_ROUNDS = ("GAME_IN_BETWEEN_ROUNDS",)
+    NONE = "NONE"
+    STARTED = "GAME_STARTED"
+    IN_PROGRESS = "GAME_IN_PROGRESS"
+    IN_BETWEEN_ROUNDS = "GAME_IN_BETWEEN_ROUNDS"
     FINISHED = "GAME_FINISHED"
     CLOSED = "GAME_CLOSED"
 
 
 class IIntegration:
     def __init__(self):
-        from overwatch import Overwatch
-
-        self.__overwatch: Overwatch = None
+        self.__overwatch: "Overwatch | None"
 
     def cleanup(self):
         pass
 
-    def update_integration(self, overwatch):
+    def update_integration(self, overwatch: "Overwatch | None"):
         self.__overwatch = overwatch
 
     @property
     def connection(self):
+        if not self.__overwatch:
+            return None
         return self.__overwatch.connection
 
     @property
@@ -49,7 +54,7 @@ class IIntegration:
         """Called when Workshop mode has used Log To Inspector, messages are excluded"""
         pass
 
-    def on_message(self, name: str, data: dict[str, any]):
+    def on_message(self, name: str, data: dict[str, Any]):
         """Called when message has been received"""
         pass
 

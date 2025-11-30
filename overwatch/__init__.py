@@ -1,9 +1,12 @@
 import asyncio
+from typing import Any
 from logger import create_logger
 from owtp import OWTP
 from overwatch.player import Player
 from overwatch.integration import IIntegration, GameState
 from log_watcher.log_watcher import WorkshopLogWatcher
+from owtp.message import Message
+from owtp.message_structure import MessageStructure
 
 logger = create_logger("Overwatch")
 
@@ -14,9 +17,9 @@ class Overwatch(IIntegration):
 
         self._state: GameState = GameState.NONE
         self._players: dict[int, dict[int, Player]] = {0: {}, 1: {}, 2: {}}
-        self._mode: str = None
-        self._map: str = None
-        self._connection: OWTP = None
+        self._mode: str | None = None
+        self._map: str | None = None
+        self._connection: OWTP | None = None
         self._integrations = integrations
 
         def on_log_created(path: str):
@@ -35,7 +38,7 @@ class Overwatch(IIntegration):
         def on_workshop_output(lines: list[str]):
             if not self._connection:
                 logger.warning(
-                    f"Received Workshop output, but OWTP instance wasn't created, ignoring..."
+                    "Received Workshop output, but OWTP instance wasn't created, ignoring..."
                 )
                 return
 
@@ -116,11 +119,11 @@ class Overwatch(IIntegration):
         for integration in self._integrations:
             integration.on_error()
 
-    def on_log(self, log):
+    def on_log(self, log: str):
         for integration in self._integrations:
             integration.on_log(log)
 
-    def on_message(self, name, data):
+    def on_message(self, name: str, data: Any):
         match name:
             case "REGISTER_PLAYER":
                 name, team, slot = data["name"], data["team"], data["slot"]
@@ -141,27 +144,30 @@ class Overwatch(IIntegration):
             case GameState.FINISHED.value:
                 self.state = GameState.FINISHED
 
+            case _:
+                pass
+
         # TODO: info if message wasn't handled
         for integration in self._integrations:
             integration.on_message(name, data)
 
-    def on_message_structure_registered(self, structure):
+    def on_message_structure_registered(self, structure: MessageStructure):
         for integration in self._integrations:
             integration.on_message_structure_registered(structure)
 
-    def on_message_started_sending(self, message):
+    def on_message_started_sending(self, message: Message):
         for integration in self._integrations:
             integration.on_message_started_sending(message)
 
-    def on_message_sent(self, message):
+    def on_message_sent(self, message: Message):
         for integration in self._integrations:
             integration.on_message_sent(message)
 
-    def on_message_error(self, message):
+    def on_message_error(self, message: Message):
         for integration in self._integrations:
             integration.on_message_error(message)
 
-    def on_game_state_change(self, state):
+    def on_game_state_change(self, state: GameState):
         for integration in self._integrations:
             integration.on_game_state_change(state)
 

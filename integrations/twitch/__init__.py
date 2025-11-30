@@ -1,11 +1,13 @@
 import asyncio
+from typing import Any
 from twitchAPI.twitch import Twitch, TwitchUser
-from twitchAPI.oauth import UserAuthenticator, UserAuthenticationStorageHelper
-from twitchAPI.type import AuthScope, ChatEvent, ChatRoom
-from twitchAPI.chat import Chat, EventData, ChatMessage, ChatSub, ChatCommand
+from twitchAPI.oauth import UserAuthenticationStorageHelper
+from twitchAPI.type import AuthScope, ChatEvent
+from twitchAPI.chat import Chat, EventData, ChatMessage, ChatCommand
 from logger import create_logger
 from overwatch.integration import IIntegration
 from overwatch import GameState
+from owtp.message import Message
 from .poll import Poll
 
 logger = create_logger("Twitch")
@@ -27,11 +29,11 @@ class TwitchIntegration(IIntegration):
         self._app_secret = app_secret
         self._channel = channel
 
-        self._twitch: Twitch = None
-        self._chat: Chat = None
-        self._me: TwitchUser = None
+        self._twitch: Twitch | None = None
+        self._chat: Chat | None = None
+        self._me: TwitchUser | None = None
 
-        self._poll: Poll = None
+        self._poll: Poll | None = None
         self._room_id_cache: dict[str, str] = {}
 
         self._loop = asyncio.get_event_loop()
@@ -114,8 +116,8 @@ class TwitchIntegration(IIntegration):
 
         await self._handle_vote(args[0], cmd.user.name, cmd.source_room_id)
 
-    async def _handle_vote(self, vote: str, voter: str, source_room_id: any):
-        if not self._poll:
+    async def _handle_vote(self, vote: str, voter: str, source_room_id: Any):
+        if not self._twitch or not self._poll:
             return
 
         # in shared chat, get name of the streamer in which the msg was sent in
@@ -137,13 +139,16 @@ class TwitchIntegration(IIntegration):
 
         self._poll = Poll(choices)
 
-        choices = " | ".join(self._poll.choices_str)
+        choices_str = " | ".join(self._poll.choices_str)
 
         self.send_message_in_chat_nowait(
-            f"New poll has started! Cast your vote by typing the number corresponding to your choice in chat: {choices}. Voting will end in {timeout} in-game seconds."
+            f"New poll has started! Cast your vote by typing the number corresponding to your choice in chat: {choices_str}. Voting will end in {timeout} in-game seconds."
         )
 
     def end_poll(self):
+        if not self.connection:
+            raise RuntimeError("Missing connection")
+
         if not self._poll:
             logger.warning("Tried to end poll, but no poll is running!")
             return
@@ -180,8 +185,8 @@ class TwitchIntegration(IIntegration):
     def on_error(self):
         self.send_message_in_chat_nowait("Failed to connect with the Workshop mode!")
 
-    def on_message(self, type, data):
-        match type:
+    def on_message(self, name: str, data: dict[str, Any]):
+        match name:
             case "POLL_START":
                 timeout, choices = data["timeout"], data["choices"]
                 self.start_poll(choices=choices, timeout=timeout)
@@ -195,10 +200,16 @@ class TwitchIntegration(IIntegration):
             case "SEND_MESSAGE":
                 self.send_message_in_chat_nowait(data["message"])
 
-    def on_message_error(self, message):
+            case _:
+                pass
+
+    def on_message_error(self, message: Message):
         self.send_message_in_chat_nowait(f"Failed sending message {message.name}!")
 
-    def on_game_state_change(self, state):
+    def on_game_state_change(self, state: GameState):
+        if not self.overwatch:
+            raise RuntimeError("Missing Overwatch instance")
+
         match state:
             case GameState.STARTED:
                 self.send_message_in_chat_nowait(
@@ -215,3 +226,5 @@ class TwitchIntegration(IIntegration):
             case GameState.CLOSED:
                 self.cancel_poll("Lobby has been closed")
                 # self.send_message_in_chat_nowait("Lobby has been closed")
+            case _:
+                pass

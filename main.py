@@ -1,15 +1,13 @@
 import asyncio
 from rich import get_console
-from rich.prompt import Prompt
 from overwatch import Overwatch
-from integrations.twitch import TwitchIntegration
 from logger import create_logger
 import config_manager
 
 logger = create_logger("Main")
 
 
-overwatch: Overwatch = None
+overwatch: Overwatch | None = None
 console = get_console()
 
 
@@ -18,11 +16,11 @@ async def main():
 
     config = config_manager.initialize()
 
+    from integrations.twitch import TwitchIntegration
+    from rich.prompt import Prompt
     channel = Prompt.ask(
         "Enter name of the Twitch channel to join",
-        default=(
-            None if config.twitch_last_channel == "" else config.twitch_last_channel
-        ),
+        default=(config.twitch_last_channel),
     )
     config.twitch_last_channel = channel
     config.save_if_necessary()
@@ -39,6 +37,20 @@ async def main():
         overwatch_dir=config.overwatch_dir,
         integrations=[twitch],
     )
+
+    # from integrations.test import Test
+    # overwatch = Overwatch(
+    #     overwatch_dir=config.overwatch_dir,
+    #     integrations=[Test()],
+    # )
+
+    # from integrations.websocket import Websocket
+    # websocket = Websocket()
+    # overwatch = Overwatch(
+    #     overwatch_dir=config.overwatch_dir,
+    #     integrations=[websocket],
+    # )
+    # await websocket.serve()
 
     # this is kinda ugly, but necessary for keyboard interrupts
     try:

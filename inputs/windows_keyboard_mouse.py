@@ -2,7 +2,7 @@ import asyncio
 import platform
 import os
 import keyboard as kbd
-import mouse as ms
+import mouse as ms # type: ignore
 from logger import create_logger
 from .interface import IInput
 
@@ -38,16 +38,16 @@ class KeyboardMouse(IInput):
 
     def _get_buttons(self, key: int) -> list[list[str]]:
         binary = bin(key)[2:][::-1]  # remove `0b` from beginning and reverse it
-        keyboard = []
-        mouse = []
+        keyboard: list[str] = []
+        mouse: list[str] = []
 
         for idx, char in enumerate(binary):
             if char == "1":
-                key: str = self.__keys[idx]
-                if key.startswith("mouse "):
-                    mouse.append(key.replace("mouse ", ""))
+                key_str = self.__keys[idx]
+                if key_str.startswith("mouse "):
+                    mouse.append(key_str.replace("mouse ", ""))
                 else:
-                    keyboard.append(key)
+                    keyboard.append(key_str)
 
         return [keyboard, mouse]
 
@@ -67,7 +67,7 @@ class KeyboardMouse(IInput):
             for button in mouse:
                 ms.release(button)
 
-    async def send_input(self, input, held_time):
+    async def send_input(self, input: int, held_time: float):
         keyboard, mouse = self._get_buttons(input)
 
         try:

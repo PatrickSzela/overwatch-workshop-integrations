@@ -15,7 +15,7 @@ class IInput(ABC):
 
     @staticmethod
     @abstractmethod
-    def is_supported(self) -> bool:
+    def is_supported() -> bool:
         pass
 
     @abstractmethod

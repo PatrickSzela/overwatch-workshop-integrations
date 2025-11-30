@@ -1,6 +1,13 @@
 import os
 import platform
-from watchdog.events import FileSystemEventHandler
+from watchdog.events import (
+    FileSystemEventHandler,
+    DirCreatedEvent,
+    FileCreatedEvent,
+    DirModifiedEvent,
+    FileModifiedEvent,
+    FileClosedEvent,
+)
 from watchdog.observers import Observer
 from watchdog.observers.polling import PollingObserver
 from collections.abc import Callable
@@ -23,7 +30,10 @@ class TextFileEventHandler(FileSystemEventHandler):
         self._previous_content: list[str] = []
         self._current_file_path: str = ""
 
-    def on_created(self, event):
+    def on_created(self, event: DirCreatedEvent | FileCreatedEvent):
+        if not isinstance(event.src_path, str):
+            raise Exception()
+
         if event.is_directory or not event.src_path.endswith(".txt"):
             return
 
@@ -32,13 +42,16 @@ class TextFileEventHandler(FileSystemEventHandler):
         self._on_file_created(self._current_file_path)
         self.read_file(event.src_path)
 
-    def on_modified(self, event):
+    def on_modified(self, event: DirModifiedEvent | FileModifiedEvent):
+        if not isinstance(event.src_path, str):
+            raise Exception()
+
         if event.src_path != self._current_file_path or event.is_directory:
             return
 
         self.read_file(event.src_path)
 
-    def on_closed(self, event):
+    def on_closed(self, event: FileClosedEvent):
         if event.src_path != self._current_file_path or event.is_directory:
             return
 

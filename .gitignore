@@ -178,3 +178,4 @@ pyrightconfig.json
 config/
 user_token.json
 config.json
+logs/

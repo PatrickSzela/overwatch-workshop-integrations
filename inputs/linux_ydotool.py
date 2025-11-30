@@ -33,25 +33,27 @@ class Ydotool(IInput):
 
         try:
             subprocess.call(
+                #["host-spawn", "ydotool"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
                 ["ydotool"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
             )
             return True
         except FileNotFoundError:
             return False
 
-    def _construct_command(self, key: int, is_press: bool) -> list[str]:
-        commands = []
+    def _construct_command(self, key: int, is_press: bool) -> str:
+        # commands = ["host-spawn"]
+        commands: list[str] = []
         binary = bin(key)[2:][::-1]  # remove `0b` from beginning and reverse it
-        keyboard = []
-        mouse = []
+        keyboard: list[str] = []
+        mouse: list[str] = []
 
         for idx, char in enumerate(binary):
             if char == "1":
-                key = self.__keys[idx]
-                if key.startswith("0x"):
-                    mouse.append(key)
+                key_str = self.__keys[idx]
+                if key_str.startswith("0x"):
+                    mouse.append(key_str)
                 else:
-                    keyboard.append(key)
+                    keyboard.append(key_str)
 
         if len(keyboard):
             cmd = f"{self.__command} key -d 0 "
@@ -75,7 +77,7 @@ class Ydotool(IInput):
             command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
 
-    async def send_input(self, input, held_time):
+    async def send_input(self, input: int, held_time: float):
         press = self._construct_command(input, True)
         release = self._construct_command(input, False)
 

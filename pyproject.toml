@@ -1,4 +1,4 @@
 [project]
-name = "Overwatch Workshop Integrations"
+name = "overwatch_workshop_integrations"
 version = "0.0.1"
 description = "A proof-of-concept application that allows to control Custom Game's state from external sources"

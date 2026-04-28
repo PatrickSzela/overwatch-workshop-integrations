@@ -1,11 +1,13 @@
 import asyncio
 import json
 from collections.abc import Callable
-from logger import create_logger
-from inputs import input
 from typing import Any, TypeGuard, cast
-from .message import Message, MessageState, ReservedPackets, MessageName, MessageData
-from .message_structure import MessageStructure, MessageDataType
+
+from inputs import input
+from logger import create_logger
+
+from .message import Message, MessageData, MessageName, MessageState, ReservedPackets
+from .message_structure import MessageDataType, MessageStructure
 
 logger = create_logger("OWTP")
 
@@ -451,7 +453,9 @@ class OWTP:
     async def _handle_message_and_wait(self, name: str, data: dict[str, Any]):
         match name:
             case MessageName.CONNECT.value:
-                self._interactive = data[MessageData.REGISTER_MESSAGE_STRUCTURE_INTERACTIVE.value]
+                self._interactive = data[
+                    MessageData.REGISTER_MESSAGE_STRUCTURE_INTERACTIVE.value
+                ]
                 self._connect()
 
             case MessageName.DISCONNECT.value:

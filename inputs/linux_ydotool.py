@@ -1,7 +1,9 @@
 import asyncio
-import subprocess
 import platform
+import subprocess
+
 from logger import create_logger
+
 from .interface import IInput
 
 logger = create_logger("Inputs.Ydotool")
@@ -33,8 +35,10 @@ class Ydotool(IInput):
 
         try:
             subprocess.call(
-                #["host-spawn", "ydotool"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
-                ["ydotool"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+                # ["host-spawn", "ydotool"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+                ["ydotool"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
             )
             return True
         except FileNotFoundError:
@@ -58,14 +62,14 @@ class Ydotool(IInput):
         if len(keyboard):
             cmd = f"{self.__command} key -d 0 "
             cmd += " ".join(
-                [f"{button}:{"1" if is_press else "0"}" for button in keyboard]
+                [f"{button}:{'1' if is_press else '0'}" for button in keyboard]
             )
             commands.append(cmd)
 
         if len(mouse):
             cmd = f"{self.__command} click -D 0 "
             cmd += " ".join(
-                [f"{"0x4" if is_press else "0x8"}{button[3:]}" for button in mouse]
+                [f"{'0x4' if is_press else '0x8'}{button[3:]}" for button in mouse]
             )
             cmd += " > /dev/null"  # ignore the random output from ydotool
             commands.append(cmd)

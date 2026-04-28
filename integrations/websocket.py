@@ -1,11 +1,13 @@
 import asyncio
 import json
 from typing import Any
+
 from websockets import Server, ServerConnection
+from websockets.asyncio.server import broadcast, serve
+
 from overwatch import GameState
 from overwatch.integration import IIntegration
 from owtp.message import Message
-from websockets.asyncio.server import serve, broadcast
 
 
 class Websocket(IIntegration):
@@ -23,7 +25,7 @@ class Websocket(IIntegration):
             if isinstance(message, str):
                 data = json.loads(message)
                 print(data)
-                self.connection.send_message(data['name'], data['data'])
+                self.connection.send_message(data["name"], data["data"])
             else:
                 print(message)
 

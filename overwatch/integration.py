@@ -1,8 +1,8 @@
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
 from owtp.message import Message
 from owtp.message_structure import MessageStructure
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from overwatch import Overwatch

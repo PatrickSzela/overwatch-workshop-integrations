@@ -1,5 +1,7 @@
 import sys
+
 from logger import create_logger
+
 from .interface import IInput
 from .linux_ydotool import Ydotool
 from .windows_keyboard_mouse import KeyboardMouse

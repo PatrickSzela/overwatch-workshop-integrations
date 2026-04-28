@@ -1,5 +1,6 @@
 import random
 from typing import Any
+
 from overwatch import GameState
 from overwatch.integration import IIntegration
 from owtp.message import Message
@@ -12,7 +13,7 @@ class Test(IIntegration):
     def on_connect(self):
         if not self.connection:
             raise RuntimeError("No connection")
-        
+
         print("Successfully established connection with the Workshop mode!")
 
         # TODO: remove
@@ -40,7 +41,7 @@ class Test(IIntegration):
     def on_game_state_change(self, state: GameState):
         if not self.overwatch:
             raise RuntimeError("No Overwatch instance")
-        
+
         match state:
             case GameState.STARTED:
                 print(
@@ -60,7 +61,7 @@ class Test(IIntegration):
     def on_message(self, name: str, data: dict[str, Any]):
         if not self.connection:
             raise RuntimeError("No connection")
-        
+
         match name:
             case "POLL_START":
                 timeout, choices = data["timeout"], data["choices"]

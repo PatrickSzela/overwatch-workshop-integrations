@@ -1,13 +1,17 @@
 import asyncio
 from typing import Any
-from twitchAPI.twitch import Twitch, TwitchUser
+
+from twitchAPI.chat import Chat, ChatCommand, ChatMessage, EventData
 from twitchAPI.oauth import UserAuthenticationStorageHelper
+from twitchAPI.object.api import TwitchUser
+from twitchAPI.twitch import Twitch
 from twitchAPI.type import AuthScope, ChatEvent
-from twitchAPI.chat import Chat, EventData, ChatMessage, ChatCommand
+
 from logger import create_logger
-from overwatch.integration import IIntegration
 from overwatch import GameState
+from overwatch.integration import IIntegration
 from owtp.message import Message
+
 from .poll import Poll
 
 logger = create_logger("Twitch")

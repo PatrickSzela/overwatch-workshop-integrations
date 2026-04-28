@@ -1,16 +1,18 @@
 import os
 import platform
+from collections.abc import Callable
+
 from watchdog.events import (
-    FileSystemEventHandler,
     DirCreatedEvent,
-    FileCreatedEvent,
     DirModifiedEvent,
-    FileModifiedEvent,
     FileClosedEvent,
+    FileCreatedEvent,
+    FileModifiedEvent,
+    FileSystemEventHandler,
 )
 from watchdog.observers import Observer
 from watchdog.observers.polling import PollingObserver
-from collections.abc import Callable
+
 from logger import create_logger
 
 logger = create_logger("TextFileWatcher")

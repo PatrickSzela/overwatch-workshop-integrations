@@ -1,10 +1,11 @@
 import asyncio
 from typing import Any
-from logger import create_logger
-from owtp import OWTP
-from overwatch.player import Player
-from overwatch.integration import IIntegration, GameState
+
 from log_watcher.log_watcher import WorkshopLogWatcher
+from logger import create_logger
+from overwatch.integration import GameState, IIntegration
+from overwatch.player import Player
+from owtp import OWTP
 from owtp.message import Message
 from owtp.message_structure import MessageStructure
 

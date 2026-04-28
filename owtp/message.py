@@ -1,9 +1,10 @@
 import json
-from enum import Enum, StrEnum
 from collections.abc import Callable
+from enum import Enum, StrEnum
+from typing import Any
+
 from .ascii import encode_ascii_string
 from .message_structure import MessageDataType, MessageStructure
-from typing import Any
 
 
 class MessageState(Enum):

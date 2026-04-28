@@ -1,4 +1,5 @@
 import random
+
 from logger import create_logger
 
 logger = create_logger("Twitch.Poll")

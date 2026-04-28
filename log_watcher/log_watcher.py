@@ -1,7 +1,9 @@
 import asyncio
 import os
 from collections.abc import Callable
+
 from logger import create_logger
+
 from .text_file_watcher import TextFileWatcher
 
 logger = create_logger("LogWatcher")

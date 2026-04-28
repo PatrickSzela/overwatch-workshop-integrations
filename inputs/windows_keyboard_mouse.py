@@ -1,9 +1,12 @@
 import asyncio
-import platform
 import os
+import platform
+
 import keyboard as kbd
-import mouse as ms # type: ignore
+import mouse as ms  # type: ignore
+
 from logger import create_logger
+
 from .interface import IInput
 
 logger = create_logger("Inputs.keyboard_mouse")
@@ -32,8 +35,7 @@ class KeyboardMouse(IInput):
     def is_supported():
         return platform.system() == "Windows" or (
             # on Linux running as root is required
-            platform.system() == "Linux"
-            and os.getuid() == 0
+            platform.system() == "Linux" and os.getuid() == 0
         )
 
     def _get_buttons(self, key: int) -> list[list[str]]:

@@ -49,6 +49,15 @@ Additionally:
    2. Under **OAuth Redirect URLs** provide this URL: `http://localhost:17563`
    3. Create the application
    4. Save the generated **Client ID** and **Client secret** somewhere safe
+2. **For YouTube integration** you'll need to [set up your project on Google Cloud console](https://console.cloud.google.com/):
+   1. Create a new project (or don't if you've made one before and would like to reuse it), and select it
+   2. In the [library panel](https://console.developers.google.com/apis/library) search and enable YouTube Data API v3
+   3. In the [credentials wizard](https://console.cloud.google.com/apis/credentials/wizard):
+      1. In Credential Type, select `YouTube Data API v3` for the API and `User data` for the data that will be accessed (don't worry, no personal data will be accessed)
+      2. In Scopes, add `.../auth/youtube` scope for API `YouTube Data API v3`
+      3. For OAuth Client ID select `Desktop app` as an Application type and name it whatever you like
+      4. Download your credentials and save it somewhere safe
+   4. Add your e-mail address associated with the YouTube account you want to use as a bot to Test users in [Audience](https://console.cloud.google.com/auth/audience)
 
 ## Usage
 
@@ -63,6 +72,7 @@ Additionally:
    2. **For Twitch integration** provide the following keys generated during registration of your application:
       - **Client ID** as `application ID`
       - **Client secret** as `application secret key`
+   3. **For YouTube integration** follow the instructions shown in the terminal and authenticate with the YouTube account you wish to use as a bot
 4. **For Linux users:** start Ydotool daemon `ydotoold`
 5. Start a Custom Game that supports this application (for example [Mystery Modifiers](https://workshop.codes/mystery-modifiers)). Don't forget to move yourself to a spectator slot!
 

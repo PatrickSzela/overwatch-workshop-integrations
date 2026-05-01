@@ -10,5 +10,6 @@
     "steamuser",
     "ydotool",
     "ydotoold"
-  ]
+  ],
+  "python.analysis.ignore": ["**/generated/**", ".venv", "/usr/**"]
 }

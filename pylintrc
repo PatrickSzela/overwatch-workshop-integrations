@@ -1,0 +1,3 @@
+[MESSAGES CONTROL]
+# globally disable pylint checks (comma separated)
+disable=fixme,line-too-long

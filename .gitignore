@@ -177,5 +177,7 @@ pyrightconfig.json
 
 config/
 user_token.json
+youtube_secret.json
+youtube_creds.json
 config.json
 logs/

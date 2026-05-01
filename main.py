@@ -1,8 +1,10 @@
 import asyncio
+
 from rich import get_console
-from overwatch import Overwatch
-from logger import create_logger
+
 import config_manager
+from logger import create_logger
+from overwatch import Overwatch
 
 logger = create_logger("Main")
 
@@ -16,8 +18,10 @@ async def main():
 
     config = config_manager.initialize()
 
-    from integrations.twitch import TwitchIntegration
     from rich.prompt import Prompt
+
+    from integrations.twitch import TwitchIntegration
+
     channel = Prompt.ask(
         "Enter name of the Twitch channel to join",
         default=(config.twitch_last_channel),
@@ -32,6 +36,21 @@ async def main():
     )
 
     await twitch.connect()
+
+    # from integrations.youtube import YouTubeIntegration
+
+    # handles = Prompt.ask(
+    #     "Enter handles for channels to join (split by comma), or leave empty",
+    # )
+    # video_ids = Prompt.ask(
+    #     "Enter video ids for active streams (split by comma), or leave empty",
+    # )
+
+    # youtube = YouTubeIntegration(
+    #     channel_handles=set(handles.split(",") if handles else []),
+    #     video_ids=set(video_ids.split(",") if video_ids else []),
+    # )
+    # await youtube.connect()
 
     overwatch = Overwatch(
         overwatch_dir=config.overwatch_dir,

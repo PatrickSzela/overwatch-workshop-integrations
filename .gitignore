@@ -176,8 +176,6 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 config/
-user_token.json
-youtube_secret.json
-youtube_creds.json
-config.json
+tokens_*.json*
+config.json*
 logs/

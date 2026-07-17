@@ -50,31 +50,70 @@ Additionally:
    3. Create the application
    4. Save the generated **Client ID** and **Client secret** somewhere safe
 2. **For YouTube integration** you'll need to [set up your project on Google Cloud console](https://console.cloud.google.com/):
-   1. Create a new project (or don't if you've made one before and would like to reuse it), and select it
-   2. In the [library panel](https://console.developers.google.com/apis/library) search and enable YouTube Data API v3
-   3. In the [credentials wizard](https://console.cloud.google.com/apis/credentials/wizard):
-      1. In Credential Type, select `YouTube Data API v3` for the API and `User data` for the data that will be accessed (don't worry, no personal data will be accessed)
-      2. In Scopes, add `.../auth/youtube` scope for API `YouTube Data API v3`
-      3. For OAuth Client ID select `Desktop app` as an Application type and name it whatever you like
-      4. Download your credentials and save it somewhere safe
-   4. Add your e-mail address associated with the YouTube account you want to use as a bot to Test users in [Audience](https://console.cloud.google.com/auth/audience)
+   1. Create a new project and select it
+   2. In the [Library panel](https://console.developers.google.com/apis/library) find `YouTube Data API v3` and enable it
+   3. In the [Credentials Wizard](https://console.cloud.google.com/apis/credentials/wizard):
+      1. In **Credential Type**, select `YouTube Data API v3` for the **API** and `User data` for the data that will be accessed (don't worry, no personal data will be accessed)
+      2. In **Scopes**, add `.../auth/youtube` scope for API `YouTube Data API v3`
+      3. For **OAuth Client ID** select `Desktop app` as an **Application type** and name it whatever you like
+      4. Download your credentials file and save it somewhere safe
+   4. Add your e-mail address associated with the YouTube account you want to use as a bot to **Test users** in [Audience](https://console.cloud.google.com/auth/audience)
 
-## Usage
+## Setup
 
-1. Activate the Python virtual environment if not active already
+1. Activate the Python virtual environment if it's not active already
 2. Execute the `main.py` script
-3. If this is your first time running this application, you'll need to provide the necessary information:
-   1. Path to the Overwatch directory in your Documents folder
+3. A new configuration file `config.json` will be generated at the root directory of this project. Open it and fill it out:
+   1. `main.overwatch_dir`: path to the Overwatch directory in your Documents folder
       - **Windows users:** for majority of users, you won't have to provide this information, unless you've changed the location of your Documents or Overwatch folders
       - **Linux users:** will need to provide a path to the `Documents/Overwatch` folder in their Proton/Wine prefix:
         - For Proton (Steam): `{STEAM_LIBRARY_FOLDER}/compatdata/2357570/pfx/drive_c/users/steamuser/Documents/Overwatch`
         - For Wine: the location depends on how you've set up your game, so you're on your own here
-   2. **For Twitch integration** provide the following keys generated during registration of your application:
-      - **Client ID** as `application ID`
-      - **Client secret** as `application secret key`
-   3. **For YouTube integration** follow the instructions shown in the terminal and authenticate with the YouTube account you wish to use as a bot
-4. **For Linux users:** start Ydotool daemon `ydotoold`
-5. Start a Custom Game that supports this application (for example [Mystery Modifiers](https://workshop.codes/mystery-modifiers)). Don't forget to move yourself to a spectator slot!
+   2. **For Twitch integration**:
+      1. Insert the following information generated in the [Installation](#installation) step:
+         - `twitch.app_id`: insert **Client ID**
+         - `twitch.app_secret`: insert **Client secret**
+      2. The next time you run the application, follow the instructions shown in the terminal and authenticate with the Twitch account you'd like to use as a bot
+   3. **For YouTube integration**:
+      1. Replace the contents of `youtube.secrets` with the contents of the file generated in the [Installation](#installation) step
+      2. The next time you run the application, follow the instructions shown in the terminal and authenticate with the YouTube account you'd like to use as a bot
+
+## Usage
+
+1. Activate the Python virtual environment if it's not active already
+2. Execute the `main.py` script with your desired options (see [Examples](#Examples) below)
+3. **For Linux users:** start Ydotool daemon `ydotoold`
+4. Start a Custom Game that supports this application (for example [Mystery Modifiers](https://workshop.codes/mystery-modifiers)). Don't forget to move yourself to a spectator slot!
+
+### Examples
+
+#### Join a Twitch chat:
+
+```sh
+python ./main.py --ttv karq
+```
+
+#### Join a YouTube stream chat based on the streamer's YouTube handle
+
+`@` is optional. This option requires the stream's visibility to be set to public, and in case of multiple active streams, the most recent one will be used:
+
+```sh
+python ./main.py --yt @emongg
+```
+
+#### Join a YouTube stream chat based on it's video ID:
+
+Useful for unlisted or private streams. You can easily retrieve video ID from the stream's URL: `https://youtube.com/watch?v=<VIDEO_ID>`, `https://youtube.com/live/<VIDEO_ID>`.
+
+```sh
+python ./main.py --yt-vid S9uTScSgzrM
+```
+
+#### See all available options:
+
+```sh
+python ./main.py --help
+```
 
 ## How does this app works?
 
@@ -92,7 +131,7 @@ More information about how it works will be provided in the future.
 
 ### I want to host and play with my community a mode that utilizes this application
 
-Unfortunately, there's no easy solution for that. Because the app requires the lobby's host to be a spectator and they must not be interacting with their PC after the game starts, it's not possible for them to play that mode. You could either use an alternative Overwatch account on a separate PC to host the lobby, or ask a trusted member of your community to do that for you.
+Unfortunately, there's no easy solution for that. Because the app requires the lobby's host to be a spectator and they must not be interacting with their PC after the game starts, it's not possible for them to play such mode. You could either use an alternative Overwatch account on a separate PC to host the lobby, or ask a trusted member of your community to do that for you.
 
 ### Does every player in the lobby needs to install this application?
 
@@ -102,22 +141,26 @@ No, only the host of the lobby needs to use it.
 
 Unfortunately that's not possible.
 
-### I want to host a Custom Game that utilizes this app and talk in Twitch chat in the meantime
+### I want to host a Custom Game that utilizes this app and talk in live stream chat in the meantime
 
-Unfortunately that's not possible, at least not from the PC that's used to host the Custom Game. You must use a different device to talk in Twitch chat.
+Unfortunately that's not possible, at least not from the PC that's used to host the Custom Game. You must use a different device to talk in live stream chat.
 
 ### I want to pause the game after starting the mode
 
-Because there's no way for the app to know when the game is paused or not, you can only pause it when application isn't sending any inputs to the game (see output in the console to know when that's happening). Otherwise the app will keep trying (and failing) to send them.
+Because there's no way for the app to detect when the game is paused or not, you can only pause it when application isn't sending any messages to the game (see output in the console to know when that's happening). Otherwise the app will keep trying (and failing) to send the message.
 
 ### Sometimes the bot's messages don't show up in chat
 
-To combat spam, Twitch limits how quickly users can send messages in chat, which can sometimes cause bot's messages to not show up in chat, especially if the user whose account is being used for a bot is also sending messages from a different device. To workaround that, make sure that the account that's being used for a bot has (at least) a VIP status in your chat.
+To combat spam, both Twitch and YouTube limit how quickly users can send messages in chat, which can sometimes cause bot's messages to not show up in chat, especially if the user whose account is being used for a bot is also sending messages from a different device.
+
+For Twitch, make sure that the account that's being used for a bot has (at least) a VIP status in your chat.
+
+For YouTube, I'm not aware of any workarounds currently.
 
 ### I want to make my own Workshop mode that utilizes this application
 
-The app is still in very early stages of development and there might be changes to how the bridge works in the future, requiring you to update your mode. Additionally, testing the integration is very difficult because of how the bridge works. For these reasons, I personally wouldn't recommend making your own modes that utilize this application, at least not until I release a stable version.
+The app is still in early stages of development and there might be changes to how the bridge works in the future, requiring you to update your mode. Additionally, testing the integration is very difficult because of how the bridge works. For these reasons, I personally wouldn't recommend making your own modes that utilize this application, at least not until a stable version is released.
 
 ### Can I get banned for using this application?
 
-I can't get a definitive answer to this question, but the chances of that happening are very low. I've personally hosted Custom Game lobbies in the past that utilized this application (shoutout to KarQ), and my account is still in a good standing. Just to be safe, make sure to close this app once you've finished hosting the Custom Game.
+I can't give a definitive answer to this question, but the chances of that happening are very low. I've personally hosted Custom Game lobbies in the past that utilized this application (shoutout to KarQ), and my account is still in a good standing. Just to be safe, make sure to close this app once you've finished hosting the Custom Game.

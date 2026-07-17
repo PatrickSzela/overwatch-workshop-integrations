@@ -1,3 +1,4 @@
+import math
 import random
 from argparse import Namespace
 from collections import Counter
@@ -97,7 +98,7 @@ class Poll(IPlugin):
         choices_str = " | ".join(choices_str)
 
         self.send_message(
-            f"New poll has started! Cast your vote by sending the number corresponding to your choice in chat:\n{choices_str}. Poll will end in {timeout} in-game seconds."
+            f"New poll has started! Cast your vote by sending the number corresponding to your choice in chat:\n{choices_str}. Poll will end in {math.ceil(timeout)} in-game seconds."
         )
 
     def end_poll(self):

@@ -1,11 +1,12 @@
 from ..logging import create_logger
 from .input import IInput
 from .keyboard_mouse import KeyboardMouse
+from .kwin_nested import KwinNested
 from .ydotool import Ydotool
 
 logger = create_logger("Inputs")
 
-INPUT_METHODS: list[type[IInput]] = [Ydotool, KeyboardMouse]
+INPUT_METHODS: list[type[IInput]] = [KwinNested, Ydotool, KeyboardMouse]
 
 
 def initialize():

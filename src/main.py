@@ -4,23 +4,16 @@ import threading
 from argparse import ArgumentParser
 from typing import Any, cast
 
-from plugins.poll import Poll
-from plugins.stream.twitch import Twitch
-from plugins.stream.youtube import YouTube
-
 from .config import Config
 from .game import Game
 from .input import initialize as initialize_input
 from .logging import create_logger
-from .plugin import IPlugin
+from .plugin import IPlugin, load_plugins
 
 logger = create_logger("Main")
 
 
 game: Game | None = None
-
-
-PLUGINS: list[type[IPlugin]] = [Poll, Twitch, YouTube]
 
 
 async def _logic():
@@ -31,7 +24,9 @@ async def _logic():
         description="A proof-of-concept application that allows to control Custom Game's state from external sources",
     )
 
-    for plugin in PLUGINS:
+    plugin_classes = load_plugins()
+
+    for plugin in plugin_classes:
         plugin.add_arguments(parser)
 
     args = parser.parse_args()
@@ -39,7 +34,7 @@ async def _logic():
     input_method = initialize_input()
 
     # Initialize config
-    config = Config(PLUGINS)
+    config = Config(plugin_classes)
     config.load()
 
     args_dict = vars(args)
@@ -51,7 +46,7 @@ async def _logic():
         if args_dict[key] not in [[], None]
     }
 
-    for plugin in PLUGINS:
+    for plugin in plugin_classes:
         if (plugin.name.lower() in plugin_names) or plugin.always_enabled:
             cfg = cast(
                 Any,

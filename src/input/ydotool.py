@@ -1,5 +1,6 @@
 import platform
 import shutil
+import subprocess
 
 from ..logging import create_logger
 from .input import IInput
@@ -25,6 +26,11 @@ class Ydotool(IInput):
             platform.system() == "Linux"
             and shutil.which(Ydotool.command) is not None
         )
+
+    def __init__(self) -> None:
+        processes = subprocess.check_output(["ps", "aux"]).decode()
+        if "ydotoold" not in processes.lower():
+            self.logger.warning("Ydotoold daemon is not running, don't forget to start it!")
 
     def create_task(self, keys: list[str], is_press: bool):
         commands: list[str] = []

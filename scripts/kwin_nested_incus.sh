@@ -4,7 +4,7 @@ SSH_ARGS="$1"
 CONTAINER_NAME="$2"
 PROJECT_PATH="$3"
 WAYLAND_NAME="NestedWayland"
-WAYLAND_SOCKET="/run/user/1000/wayland-nested"
+WAYLAND_SOCKET="$XDG_RUNTIME_DIR/wayland-nested"
 XWAYLAND_NAME="NestedXWayland"
 XWAYLAND_SOCKET="/tmp/.X11-unix/X1"
 

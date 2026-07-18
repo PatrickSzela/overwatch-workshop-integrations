@@ -13,12 +13,7 @@ from .plugin import IPlugin, load_plugins
 logger = create_logger("Main")
 
 
-game: Game | None = None
-
-
 async def _logic():
-    global game
-
     parser = ArgumentParser(
         prog="main.py",
         description="A proof-of-concept application that allows to control Custom Game's state from external sources",
@@ -32,7 +27,6 @@ async def _logic():
     args = parser.parse_args()
     input_method = await initialize_input()
 
-    # Initialize config
     config = Config(plugin_classes)
     config.load()
 
@@ -66,21 +60,6 @@ async def _logic():
         input_method=input_method,
     )
 
-    # from plugins.test.test import Test
-    # game = Game(
-    #     overwatch_dir=config.overwatch_dir,
-    #     plugins=[Test()],
-    # )
-
-    # from integrations.websocket import Websocket
-    # websocket = Websocket()
-    # game = Game(
-    #     overwatch_dir=config.overwatch_dir,
-    #     integrations=[websocket],
-    # )
-    # await websocket.serve()
-
-    # this is kinda ugly, but necessary for keyboard interrupts
     try:
         while True:
             await asyncio.sleep(1)

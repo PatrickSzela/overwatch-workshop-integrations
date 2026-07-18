@@ -20,6 +20,6 @@ class IWaylandNested(IInput):
             return False
 
         os.environ["WAYLAND_DISPLAY"] = WAYLAND_SOCKET
-        os.environ["DISPLAY"] = ":1"
+        os.environ["DISPLAY"] = f":{XWAYLAND_DISPLAY}"
 
         return True

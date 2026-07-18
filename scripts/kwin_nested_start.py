@@ -1,10 +1,11 @@
-import os
-import subprocess
 import argparse
+import os
 import shlex
+import subprocess
 import time
 
 WAYLAND_SOCKET = "wayland-nested"
+XWAYLAND_DISPLAY = "1"
 
 
 def main():
@@ -23,7 +24,7 @@ def main():
         "kwin_wayland",
         "--xwayland",
         "--xwayland-display",
-        ":1",
+        f":{XWAYLAND_DISPLAY}",
         # "--xwayland-xauthority",
         # "/tmp/xauth_nested",
         "--width",
@@ -58,7 +59,9 @@ def main():
         print(
             "Nested KWin is running. To run an application inside this nested session use:"
         )
-        print(f"  WAYLAND_DISPLAY={WAYLAND_SOCKET} DISPLAY=:1 <your-app>")
+        print(
+            f"  WAYLAND_DISPLAY={WAYLAND_SOCKET} DISPLAY=:{XWAYLAND_DISPLAY} <your-app>"
+        )
         print(
             "\n================================================================================\n"
         )
@@ -67,7 +70,7 @@ def main():
             time.sleep(1)
             env = os.environ.copy()
             env["WAYLAND_DISPLAY"] = WAYLAND_SOCKET
-            env["DISPLAY"] = ":1"
+            env["DISPLAY"] = f":{XWAYLAND_DISPLAY}"
             subprocess.Popen(shlex.split(args.command), env=env)
 
         proc.wait()

@@ -29,8 +29,11 @@ class Ydotool(IInput):
 
     def __init__(self) -> None:
         processes = subprocess.check_output(["ps", "aux"]).decode()
+
         if "ydotoold" not in processes.lower():
-            self.logger.warning("Ydotoold daemon is not running, don't forget to start it!")
+            self.logger.warning(
+                "Ydotoold daemon is not running, don't forget to start it!"
+            )
 
     def create_task(self, keys: list[str], is_press: bool):
         commands: list[str] = []

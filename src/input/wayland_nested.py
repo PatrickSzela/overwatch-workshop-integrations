@@ -1,12 +1,15 @@
 import os
 import platform
+from pathlib import Path
 
 from .input import IInput
 
 WAYLAND_SOCKET = "wayland-nested"
 XWAYLAND_DISPLAY = "1"
-WAYLAND_SOCKET_PATH = f"{os.environ.get('XDG_RUNTIME_DIR')}/{WAYLAND_SOCKET}"
-XWAYLAND_SOCKET_PATH = f"/tmp/.X11-unix/X{XWAYLAND_DISPLAY}"
+WAYLAND_SOCKET_PATH = Path(
+    os.environ.get("XDG_RUNTIME_DIR", "/run/user/1000"), WAYLAND_SOCKET
+)
+XWAYLAND_SOCKET_PATH = Path("/tmp/.X11-unix/", f"X{XWAYLAND_DISPLAY}")
 
 
 class IWaylandNested(IInput):

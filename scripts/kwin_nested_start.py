@@ -78,14 +78,7 @@ def main():
         print("\nTerminating nested KWin...")
     finally:
         if proc:
-            try:
-                proc.terminate()
-                proc.wait(timeout=2.0)
-            except Exception:
-                try:
-                    proc.kill()
-                except Exception:
-                    print("Failed to kill the nested KWin session!")
+            proc.terminate()
 
 
 if __name__ == "__main__":

@@ -1,16 +1,27 @@
 from ..logging import create_logger
 from .input import IInput
 from .keyboard_mouse import KeyboardMouse
-from .kwin_nested import KwinNested
+from .wayland_nested_xdotool import WaylandNestedXdotool
+from .xdotool import Xdotool
 from .ydotool import Ydotool
 
 logger = create_logger("Inputs")
 
-INPUT_METHODS: list[type[IInput]] = [KwinNested, Ydotool, KeyboardMouse]
+INPUT_METHODS: list[type[IInput]] = [
+    WaylandNestedXdotool,
+    Ydotool,
+    Xdotool,
+    KeyboardMouse,
+]
 
 
-def initialize():
-    input_class = next((i for i in INPUT_METHODS if i.is_supported()), None)
+async def initialize():
+    input_class: type[IInput] | None = None
+
+    for i in INPUT_METHODS:
+        if await i.is_supported():
+            input_class = i
+            break
 
     if not input_class:
         raise RuntimeError(
@@ -18,4 +29,7 @@ def initialize():
         )
 
     logger.info('Using "%s" for sending inputs', input_class.name)
-    return input_class()
+
+    cl = input_class()
+    await cl.initialize()
+    return cl

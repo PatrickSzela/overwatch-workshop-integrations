@@ -1,0 +1,14 @@
+from ..logging import create_logger
+from .wayland_nested import IWaylandNested
+from .xdotool import Xdotool
+
+
+class WaylandNestedXdotool(IWaylandNested, Xdotool):
+    name = "wayland_nested_xdotool"
+    logger = create_logger("Input.WlNstXdotool")
+
+    @staticmethod
+    async def is_supported() -> bool:
+        return (
+            await IWaylandNested.is_supported() and await Xdotool.is_supported()
+        )

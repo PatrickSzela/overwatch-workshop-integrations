@@ -1,21 +1,67 @@
+import asyncio
 from abc import ABC, abstractmethod
-from typing import ClassVar
-
-# TODO: ensure overwatch window is focused
+from logging import Logger
+from typing import Any, Awaitable, ClassVar
 
 
 class IInput(ABC):
     name: ClassVar[str]
+    logger: Logger
+    keys: list[Any]
 
-    @abstractmethod
-    def __init__(self):
+    async def initialize(self):
+        pass
+
+    async def cleanup(self):
         pass
 
     @staticmethod
     @abstractmethod
-    def is_supported() -> bool:
+    async def is_supported() -> bool:
         pass
 
     @abstractmethod
-    async def send_input(self, input: int, held_time: float) -> None:
+    def create_task(self, keys: list[Any], is_press: bool) -> Awaitable[Any]:
         pass
+
+    async def _create_subprocess(self, command: str):
+        proc = await asyncio.create_subprocess_shell(
+            command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
+        stdout, stderr = await proc.communicate()
+
+        if proc.returncode != 0:
+            self.logger.warning(
+                'Command "%s" failed with exit code %d, stderr: %s, stdout: %s',
+                command,
+                proc.returncode,
+                stderr.decode().strip(),
+                stdout.decode().strip(),
+            )
+
+    async def send_input(self, key: int, held_time: float) -> None:
+        binary = bin(key)[2:][::-1]  # remove `0b` from beginning and reverse it
+        keys = [
+            self.keys[idx] for idx, char in enumerate(binary) if char == "1"
+        ]
+
+        press = self.create_task(keys, True)
+        release = self.create_task(keys, False)
+
+        try:
+            self.logger.debug("Pressing buttons: %s", key)
+            await press
+
+            await asyncio.sleep(held_time)
+
+            self.logger.debug("Releasing buttons: %s", key)
+            await release
+        except BaseException as e:
+            self.logger.warning(
+                "Releasing buttons because of exception: %s", repr(e)
+            )
+            await release
+            raise e

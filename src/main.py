@@ -30,8 +30,7 @@ async def _logic():
         plugin.add_arguments(parser)
 
     args = parser.parse_args()
-
-    input_method = initialize_input()
+    input_method = await initialize_input()
 
     # Initialize config
     config = Config(plugin_classes)

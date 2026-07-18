@@ -39,11 +39,12 @@ add_device() {
 
 remove_device() {
   sudo incus config device remove "$CONTAINER_NAME" "$1"
+  sudo incus exec "$CONTAINER_NAME" -- rm "$2"
 }
 
 cleanup() {
-  remove_device "$WAYLAND_NAME"
-  remove_device "$XWAYLAND_NAME"
+  remove_device "$WAYLAND_NAME" "$WAYLAND_SOCKET"
+  remove_device "$XWAYLAND_NAME" "$XWAYLAND_SOCKET"
   exit 0
 }
 

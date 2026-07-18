@@ -5,7 +5,7 @@ from .wayland_nested_xdotool import WaylandNestedXdotool
 from .xdotool import Xdotool
 from .ydotool import Ydotool
 
-logger = create_logger("Inputs")
+logger = create_logger("Input")
 
 INPUT_METHODS: list[type[IInput]] = [
     WaylandNestedXdotool,

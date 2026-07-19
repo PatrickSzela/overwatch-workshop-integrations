@@ -3,7 +3,7 @@
 import json
 from collections.abc import Callable
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Mapping, Protocol, cast
+from typing import TYPE_CHECKING, Any, Mapping, Protocol, TypeGuard, cast
 
 from ...helpers import EmptyData
 from .alphabet import encode_string
@@ -171,3 +171,10 @@ def define_message_out[T: Mapping[str, Any] = EmptyData](
 
     typed_creator = cast(DefineMessageOut[T], creator)
     return typed_creator
+
+
+def is_message_out[T: Mapping[str, Any]](
+    message: MessageOut[Any], message_class: DefineMessageOut[T]
+) -> TypeGuard[MessageOut[T]]:
+    "Type guard for narrowing down a type of outgoing message :class:`MessageOut` to a specified message class created by :func:`define_message_out`."
+    return message.name == message_class.name

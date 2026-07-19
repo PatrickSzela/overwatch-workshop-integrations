@@ -121,8 +121,15 @@ class Poll(IPlugin):
         self.send_message(
             f'Poll has ended, "{winner_str}" won! Results: {results_str}'
         )
-        self.owtp.send_message(PollWinner({"winnerIdx": winner}))
-        self._in_progress = False
+
+        def on_finish():
+            self._in_progress = False
+
+        self.owtp.send_message(
+            PollWinner(
+                {"winnerIdx": winner}, on_finish=on_finish, on_error=on_finish
+            )
+        )
 
     def cancel_poll(self, reason: str):
         if not self._in_progress:
@@ -130,6 +137,11 @@ class Poll(IPlugin):
                 "Tried to cancel a poll while one hasn't been started yet"
             )
             return
+
+        if not self.owtp:
+            raise RuntimeError("Missing connection")
+
+        self.owtp.remove_messages_of_type(PollWinner)
 
         self.send_message(f"Poll has been cancelled, reason: {reason}")
         self._in_progress = False

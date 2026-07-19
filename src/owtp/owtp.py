@@ -9,12 +9,14 @@ from ..logging import create_logger
 from . import messages
 from .message import (
     DefineMessageIn,
+    DefineMessageOut,
     MessageData,
     MessageIn,
     MessageName,
     MessageOut,
     MessageOutState,
     is_message_in,
+    is_message_out,
 )
 
 logger = create_logger("OWTP")
@@ -45,6 +47,7 @@ class OWTP:
     ):
         self._connected = False
         self._interactive = False
+        self._message_being_sent: MessageOut | None = None
         self._registered_supported_messages: dict[
             str, messages.SupportedMessageDefinition
         ] = {}
@@ -58,8 +61,11 @@ class OWTP:
         )
 
         self._messages_queue: asyncio.Queue[MessageOut] = asyncio.Queue()
+        # since asyncio Queue doesn't support removing items, let's do this the ugly way
+        self._messages_queue_list: list[MessageOut] = []
         self._responses_queue: asyncio.Queue[Response] = asyncio.Queue()
         self._process_messages_pause_event: asyncio.Event = asyncio.Event()
+        self._process_messages_cancel_event: asyncio.Event = asyncio.Event()
         self._process_messages_queue_task: asyncio.Task[Any] = (
             asyncio.create_task(self._process_messages_queue())
         )
@@ -184,6 +190,7 @@ class OWTP:
         )
 
         self._messages_queue.put_nowait(message)
+        self._messages_queue_list.append(message)
 
     def _retry_sending_message(self, error_code: str):
         if self._send_message_task:
@@ -195,25 +202,55 @@ class OWTP:
         elif not pause and self._process_messages_pause_event.is_set():
             self._process_messages_pause_event.clear()
 
+    def remove_messages_of_type(self, message_type: DefineMessageOut[Any]):
+        msg_list = self._messages_queue_list
+
+        if self._message_being_sent:
+            msg_list.append(self._message_being_sent)
+
+        for msg in msg_list:
+            if is_message_out(msg, message_type):
+                self.remove_message(msg)
+
+    def remove_message(self, message: MessageOut):
+        if self._message_being_sent == message:
+            self.cancel_sending_message()
+
+        if message in self._messages_queue_list:
+            self._messages_queue_list.remove(message)
+
+    def cancel_sending_message(self):
+        self._process_messages_cancel_event.set()
+
     async def _process_messages_queue(self):
         while not self._process_queues_stop_event.is_set():
             fail_reason: str = ""
-            message = await self._messages_queue.get()
+
+            msg = await self._messages_queue.get()
+
+            if msg not in self._messages_queue_list:
+                continue
+
+            self._message_being_sent = msg
+            self._messages_queue_list.remove(self._message_being_sent)
+            self._process_messages_cancel_event.clear()
 
             while self._process_messages_pause_event.is_set():
                 await asyncio.sleep(0.1)
 
             logger.debug(
                 'Starting sending message "%s" with data %s, packets: %s',
-                message.name,
-                message.data,
-                message.packets,
+                self._message_being_sent.name,
+                self._message_being_sent.data,
+                self._message_being_sent.packets,
             )
-            message.state = MessageOutState.SENDING
-            self.on_send_message_start(message)
+            self._message_being_sent.state = MessageOutState.SENDING
+            self.on_send_message_start(self._message_being_sent)
 
-            for i in range(message.number_of_attempts + 1):
-                result = await self._process_message_queue_loop_iter(message, i)
+            for i in range(self._message_being_sent.number_of_attempts + 1):
+                result = await self._process_message_queue_loop_iter(
+                    self._message_being_sent, i
+                )
 
                 if result:
                     if isinstance(result, str):
@@ -224,8 +261,10 @@ class OWTP:
 
             if fail_reason:
                 logger.warning(fail_reason)
-                message.state = MessageOutState.ERROR
-                self.on_send_message_error(message, fail_reason)
+                self._message_being_sent.state = MessageOutState.ERROR
+                self.on_send_message_error(
+                    self._message_being_sent, fail_reason
+                )
 
             self._messages_queue.task_done()
 
@@ -234,10 +273,12 @@ class OWTP:
                 and not fail_reason
                 and self._interactive
             ):
-                if message.name != "TRANSMISSION_FINISHED":
+                if self._message_being_sent.name != "TRANSMISSION_FINISHED":
                     self.send_message(messages.TransmissionFinishedMessage())
                 else:
                     self._pause_sending_messages(True)
+
+            self._message_being_sent = None
 
     async def _process_message_queue_loop_iter(
         self, message: MessageOut, attempt: int
@@ -247,6 +288,9 @@ class OWTP:
 
         if self._process_queues_stop_event.is_set():
             return f'Cancelling sending message "{message.name}" (try #{attempt + 1}) - received stop event'
+
+        if self._process_messages_cancel_event.is_set():
+            return f'Cancelling sending message "{message.name}" (try #{attempt + 1}) - received cancel event'
 
         logger.info(
             'Sending message "%s" (try #%s)...', message.name, attempt + 1

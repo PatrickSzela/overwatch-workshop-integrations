@@ -99,14 +99,13 @@ class OWTP:
         self._messages_queue.shutdown(True)
         self._process_queues_stop_event.set()
 
-        if self._send_message_task:
-            self._send_message_task.cancel()
-
-        if self._process_workshop_output_queue_task:
-            self._process_workshop_output_queue_task.cancel()
-
-        if self._process_messages_queue_task:
-            self._process_messages_queue_task.cancel()
+        for task in (
+            self._send_message_task,
+            self._process_workshop_output_queue_task,
+            self._process_messages_queue_task,
+        ):
+            if task:
+                task.cancel()
 
         self._registered_supported_messages = {}
 
@@ -174,14 +173,12 @@ class OWTP:
 
     # region Queue & sending inputs
     def send_message(self, message: MessageOut):
-        definition = self._registered_supported_messages[message.name]
-
-        if not definition:
+        if message.name not in self._registered_supported_messages:
             raise RuntimeError(
                 f"Cannot send message {message.name} - the Workshop mode hasn't reported that it supports it!"
             )
 
-        message.prepare(definition)
+        message.prepare(self._registered_supported_messages[message.name])
 
         logger.debug(
             'Adding message "%s" with data %s to the queue',
@@ -197,9 +194,9 @@ class OWTP:
             self._send_message_task.cancel(error_code)
 
     def _pause_sending_messages(self, pause: bool):
-        if pause and not self._process_messages_pause_event.is_set():
+        if pause:
             self._process_messages_pause_event.set()
-        elif not pause and self._process_messages_pause_event.is_set():
+        else:
             self._process_messages_pause_event.clear()
 
     def remove_messages_of_type(self, message_type: DefineMessageOut[Any]):
@@ -224,15 +221,13 @@ class OWTP:
 
     async def _process_messages_queue(self):
         while not self._process_queues_stop_event.is_set():
-            fail_reason: str = ""
-
             msg = await self._messages_queue.get()
 
             if msg not in self._messages_queue_list:
                 continue
 
             self._message_being_sent = msg
-            self._messages_queue_list.remove(self._message_being_sent)
+            self._messages_queue_list.remove(msg)
             self._process_messages_cancel_event.clear()
 
             while self._process_messages_pause_event.is_set():
@@ -240,31 +235,19 @@ class OWTP:
 
             logger.debug(
                 'Starting sending message "%s" with data %s, packets: %s',
-                self._message_being_sent.name,
-                self._message_being_sent.data,
-                self._message_being_sent.packets,
+                msg.name,
+                msg.data,
+                msg.packets,
             )
-            self._message_being_sent.state = MessageOutState.SENDING
-            self.on_send_message_start(self._message_being_sent)
+            msg.state = MessageOutState.SENDING
+            self.on_send_message_start(msg)
 
-            for i in range(self._message_being_sent.number_of_attempts + 1):
-                result = await self._process_message_queue_loop_iter(
-                    self._message_being_sent, i
-                )
-
-                if result:
-                    if isinstance(result, str):
-                        fail_reason = result
-                    break
-
-                await asyncio.sleep(1.5)
+            fail_reason = await self._send_with_retries(msg)
 
             if fail_reason:
                 logger.warning(fail_reason)
-                self._message_being_sent.state = MessageOutState.ERROR
-                self.on_send_message_error(
-                    self._message_being_sent, fail_reason
-                )
+                msg.state = MessageOutState.ERROR
+                self.on_send_message_error(msg, fail_reason)
 
             self._messages_queue.task_done()
 
@@ -273,49 +256,49 @@ class OWTP:
                 and not fail_reason
                 and self._interactive
             ):
-                if self._message_being_sent.name != "TRANSMISSION_FINISHED":
+                if msg.name != "TRANSMISSION_FINISHED":
                     self.send_message(messages.TransmissionFinishedMessage())
                 else:
                     self._pause_sending_messages(True)
 
             self._message_being_sent = None
 
-    async def _process_message_queue_loop_iter(
-        self, message: MessageOut, attempt: int
-    ):
-        if attempt >= message.number_of_attempts:
-            return f'Giving up on message "{message.name}" after sending it {attempt} times!'
+    async def _send_with_retries(self, message: MessageOut):
+        for attempt in range(message.number_of_attempts):
+            if self._process_queues_stop_event.is_set():
+                return f'Cancelling sending message "{message.name}" (try #{attempt + 1}) - received stop event'
 
-        if self._process_queues_stop_event.is_set():
-            return f'Cancelling sending message "{message.name}" (try #{attempt + 1}) - received stop event'
+            if self._process_messages_cancel_event.is_set():
+                return f'Cancelling sending message "{message.name}" (try #{attempt + 1}) - received cancel event'
 
-        if self._process_messages_cancel_event.is_set():
-            return f'Cancelling sending message "{message.name}" (try #{attempt + 1}) - received cancel event'
-
-        logger.info(
-            'Sending message "%s" (try #%s)...', message.name, attempt + 1
-        )
-
-        try:
-            self._send_message_task = asyncio.create_task(
-                self._process_message_queue_send_msg(message, attempt)
-            )
-            await self._send_message_task
-            return True
-        except BaseException as e:
-            logger.warning(
-                'Failed sending message "%s" (try #%s): %s',
-                message.name,
-                attempt + 1,
-                repr(e),
+            logger.info(
+                'Sending message "%s" (try #%s)...', message.name, attempt + 1
             )
 
-        return False
+            try:
+                self._send_message_task = asyncio.create_task(
+                    self._send_and_confirm(message, attempt)
+                )
+                await self._send_message_task
+                return
+            except BaseException as e:
+                logger.warning(
+                    'Failed sending message "%s" (try #%s): %s',
+                    message.name,
+                    attempt + 1,
+                    repr(e),
+                )
 
-    async def _process_message_queue_send_msg(
-        self, message: MessageOut, attempt: int
-    ):
-        await self._process_message_queue_send_packets(message)
+            await asyncio.sleep(1.5)
+
+        return f'Giving up on message "{message.name}" after sending it {message.number_of_attempts} times!'
+
+    async def _send_and_confirm(self, message: MessageOut, attempt: int):
+        for packet in message.packets:
+            await self._input_method.send_input(
+                packet, DELAY_BETWEEN_DOWN_AND_UP_BUTTONS
+            )
+            await asyncio.sleep(DELAY_BEFORE_NEXT_INPUTS)
 
         logger.debug(
             'Finished sending packets of message "%s", awaiting for confirmation...',
@@ -323,9 +306,7 @@ class OWTP:
         )
 
         await asyncio.wait_for(
-            self._process_message_queue_wait_for_response(
-                name=MessageName.CONFIRM.value,
-            ),
+            self._wait_for_response(MessageName.CONFIRM.value),
             1.5,
         )
 
@@ -338,14 +319,7 @@ class OWTP:
         message.state = MessageOutState.SENT
         self.on_send_message_finish(message)
 
-    async def _process_message_queue_send_packets(self, message: MessageOut):
-        for packet in message.packets:
-            await self._input_method.send_input(
-                packet, DELAY_BETWEEN_DOWN_AND_UP_BUTTONS
-            )
-            await asyncio.sleep(DELAY_BEFORE_NEXT_INPUTS)
-
-    async def _process_message_queue_wait_for_response(
+    async def _wait_for_response(
         self,
         name: str,
         data_condition: Callable[[Mapping[str, Any]], bool] = lambda _: True,
@@ -398,36 +372,39 @@ class OWTP:
 
             self._workshop_output_queue.task_done()
 
+    def _parse_workshop_output(self, line: str) -> tuple[str, dict[str, Any]]:
+        payload = line.split("] ", 1)[1]
+        arr: list[Any] = json.loads(payload)
+
+        if not is_key_value_pair(arr):
+            raise TypeError(
+                f"The following Workshop output is not a key-value pair structure: {line}"
+            )
+
+        data: dict[str, Any] = key_value_pair_to_dict(arr)
+        name = data.pop(MessageData.MESSAGE_NAME.value)
+
+        if not isinstance(name, str):
+            raise TypeError(
+                f"Name of the message must be a string, but passed {name}"
+            )
+
+        return name, data
+
     async def _handle_workshop_output(self, line: str):
         try:
-            line = line.split("] ", 1)[1]
-            arr: list[Any] = json.loads(line)
-
-            if not is_key_value_pair(arr):
-                raise TypeError(
-                    f"The following Workshop output is not a key-value pair structure: {line}"
-                )
-
-            data: dict[str, Any] = key_value_pair_to_dict(arr)
-            name = data[MessageData.MESSAGE_NAME.value]
-            del data[MessageData.MESSAGE_NAME.value]
+            name, data = self._parse_workshop_output(line)
         except Exception:
             logger.info('Workshop log: "%s"', line)
             self.on_log(line)
             return
 
+        message_class = self._registered_messages_in.get(name)
+        if not message_class:
+            logger.warning('Unregistered message "%s" - skipping', name)
+            return
+
         try:
-            if not isinstance(name, str):
-                raise TypeError(
-                    f"Name of the message must be a string, but passed {name}"
-                )
-
-            message_class = self._registered_messages_in[name]
-
-            if not message_class:
-                logger.warning('Unregistered message "%s" - skipping', name)
-                return
-
             message = message_class(data=data)
         except Exception as e:
             logger.warning(
@@ -436,32 +413,25 @@ class OWTP:
             return
 
         logger.debug('Received message "%s" with data %s', name, data)
-        await self._handle_message_and_wait(message)
+        await self._dispatch_message(message)
 
-    async def _handle_message_and_wait(self, message: MessageIn):
+    async def _dispatch_message(self, message: MessageIn):
         if is_message_in(message, messages.ConnectMessage):
             self._connect(message)
-
         elif is_message_in(message, messages.DisconnectMessage):
             self._disconnect()
-
         elif is_message_in(message, messages.SupportsMessage):
             self._register_supported_message(
                 messages.SupportedMessageDefinition(**message.data)
             )
-
         elif is_message_in(message, messages.ConfirmMessage):
             await self._pass_response_and_wait(message)
-
         elif is_message_in(message, messages.ErrorMessage):
             self._retry_sending_message(message.data["errorCode"])
-
         elif is_message_in(message, messages.TransmissionReadyMessage):
             self._pause_sending_messages(False)
-
         elif is_message_in(message, messages.TransmissionNotReadyMessage):
             self._pause_sending_messages(True)
-
         else:
             self.on_message(message)
 

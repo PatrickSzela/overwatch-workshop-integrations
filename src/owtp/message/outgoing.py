@@ -5,7 +5,7 @@ from collections.abc import Callable
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Mapping, Protocol, TypeGuard, cast
 
-from ...helpers import EmptyData
+from ...utils import EmptyData
 from .alphabet import encode_string
 from .types import TYPE_MAP, MessageDataType, Vector
 

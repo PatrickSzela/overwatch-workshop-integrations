@@ -3,9 +3,14 @@ import json
 from collections.abc import Callable
 from typing import Any, Mapping
 
-from ..helpers import EventListener, is_key_value_pair, key_value_pair_to_dict
 from ..input import IInput
 from ..logging import create_logger
+from ..utils import (
+    AsyncQueue,
+    EventListener,
+    is_key_value_pair,
+    key_value_pair_to_dict,
+)
 from . import SupportedMessageDefinition, messages
 from .message import (
     DefineMessageIn,
@@ -64,9 +69,7 @@ class OWTP:
             asyncio.create_task(self._process_workshop_output_queue())
         )
 
-        self._messages_queue: asyncio.Queue[MessageOut] = asyncio.Queue()
-        # since asyncio Queue doesn't support removing items, let's do this the ugly way
-        self._messages_queue_list: list[MessageOut] = []
+        self._messages_queue: AsyncQueue[MessageOut] = AsyncQueue()
         self._responses_queue: asyncio.Queue[Response] = asyncio.Queue()
         self._process_messages_pause_event: asyncio.Event = asyncio.Event()
         self._process_messages_cancel_event: asyncio.Event = asyncio.Event()
@@ -92,7 +95,7 @@ class OWTP:
     def cleanup(self):
         self._workshop_output_queue.shutdown(True)
         self._responses_queue.shutdown(True)
-        self._messages_queue.shutdown(True)
+        self._messages_queue.shutdown()
         self._process_queues_stop_event.set()
 
         for task in (
@@ -181,7 +184,6 @@ class OWTP:
         )
 
         self._messages_queue.put_nowait(message)
-        self._messages_queue_list.append(message)
 
     def _retry_sending_message(self, error_code: str):
         if self._send_message_task:
@@ -194,12 +196,12 @@ class OWTP:
             self._process_messages_pause_event.clear()
 
     def remove_messages_of_type(self, message_type: DefineMessageOut[Any]):
-        msg_list = self._messages_queue_list
+        copy = self._messages_queue.items()
 
         if self._message_being_sent:
-            msg_list.append(self._message_being_sent)
+            copy.append(self._message_being_sent)
 
-        for msg in msg_list:
+        for msg in copy:
             if is_message_out(msg, message_type):
                 self.remove_message(msg)
 
@@ -207,8 +209,8 @@ class OWTP:
         if self._message_being_sent == message:
             self.cancel_sending_message()
 
-        if message in self._messages_queue_list:
-            self._messages_queue_list.remove(message)
+        if message in self._messages_queue:
+            self._messages_queue.remove_nowait(message)
 
     def cancel_sending_message(self):
         self._process_messages_cancel_event.set()
@@ -217,11 +219,7 @@ class OWTP:
         while not self._process_queues_stop_event.is_set():
             msg = await self._messages_queue.get()
 
-            if msg not in self._messages_queue_list:
-                continue
-
             self._message_being_sent = msg
-            self._messages_queue_list.remove(msg)
             self._process_messages_cancel_event.clear()
 
             while self._process_messages_pause_event.is_set():

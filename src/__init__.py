@@ -1,6 +1,6 @@
 from .config import *
 from .game import *
-from .helpers import *
+from .utils import *
 from .input import *
 from .logging import *
 from .main import *

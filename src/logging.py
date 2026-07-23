@@ -4,7 +4,7 @@ from datetime import datetime
 
 from rich.logging import RichHandler
 
-from .helpers import PROJECT_ROOT
+from .utils import PROJECT_ROOT
 
 LOGS_DIR = os.path.join(PROJECT_ROOT, "logs")
 

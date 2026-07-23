@@ -2,7 +2,7 @@ import json
 import os
 from typing import TypedDict
 
-from .helpers import PROJECT_ROOT
+from .utils import PROJECT_ROOT
 from .logging import create_logger
 from .plugin import IPlugin
 

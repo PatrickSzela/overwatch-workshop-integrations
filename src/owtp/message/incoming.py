@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any, Mapping, Protocol, TypeGuard, cast
 
-from ...helpers import EmptyData
+from ...utils import EmptyData
 
 
 @dataclass(frozen=True)

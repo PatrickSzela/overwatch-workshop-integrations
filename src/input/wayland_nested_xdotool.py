@@ -5,7 +5,7 @@ from .xdotool import Xdotool
 
 class WaylandNestedXdotool(IWaylandNested, Xdotool):
     name = "wayland_nested_xdotool"
-    logger = create_logger("Input.WlNstXdotool")
+    logger = create_logger("Input.WLNestXdo")
 
     @staticmethod
     async def is_supported() -> bool:

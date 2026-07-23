@@ -11,7 +11,7 @@ from .input import IInput
 
 class KeyboardMouse(IInput):
     name = "keyboard_mouse"
-    logger = create_logger("Input.kbd_mouse")
+    logger = create_logger("Input.KbdMouse")
     keys = [
         "left ctrl",
         "left shift",

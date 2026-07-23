@@ -19,7 +19,7 @@ from .generated.stream_list_pb2 import (  # pylint: disable = no-name-in-module
 )
 from .generated.stream_list_pb2_grpc import V3DataLiveChatMessageServiceStub
 
-logger = create_logger("YouTube.API.gRPC")
+logger = create_logger("YouTube.gRPC")
 
 URL = "dns:///youtube.googleapis.com:443"
 

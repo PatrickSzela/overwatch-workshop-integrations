@@ -8,7 +8,7 @@ from .input import IInput
 
 class Xdotool(IInput):
     name = "xdotool"
-    logger = create_logger("Input.xdotool")
+    logger = create_logger("Input.Xdotool")
     command = "xdotool"
     keys = [
         "Control_L",  # ctrl

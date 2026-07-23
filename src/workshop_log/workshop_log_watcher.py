@@ -5,7 +5,7 @@ from collections.abc import Callable
 from ..logging import create_logger
 from .text_file_watcher import TextFileWatcher
 
-logger = create_logger("WorkshopLogWatcher")
+logger = create_logger("WSLogWatcher")
 
 
 class WorkshopLogWatcher(TextFileWatcher):

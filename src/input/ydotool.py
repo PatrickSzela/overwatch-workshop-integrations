@@ -8,7 +8,7 @@ from .input import IInput
 
 class Ydotool(IInput):
     name = "ydotool"
-    logger = create_logger("Input.ydotool")
+    logger = create_logger("Input.Ydotool")
     command = "ydotool"
     keys = [
         "29",  # ctrl

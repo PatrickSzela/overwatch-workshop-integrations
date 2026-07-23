@@ -8,7 +8,7 @@ from ..helpers import PROJECT_ROOT
 from ..logging import create_logger
 from .plugin import IPlugin
 
-logger = create_logger("plugin_loader")
+logger = create_logger("PluginLoader")
 
 PLUGINS_PATH = "plugins"
 

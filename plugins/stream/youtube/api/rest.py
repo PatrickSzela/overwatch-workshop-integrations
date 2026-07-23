@@ -14,7 +14,7 @@ from src.logging import create_logger
 from ..auth import refresh_credentials_if_necessary
 from ..stream import YouTubeStream
 
-logger = create_logger("YouTube.API.REST")
+logger = create_logger("YouTube.REST")
 
 
 # import logging

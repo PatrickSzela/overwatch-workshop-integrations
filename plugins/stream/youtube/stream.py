@@ -1,7 +1,7 @@
 """Helper for storing data about live stream."""
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -13,4 +13,4 @@ class YouTubeStream:
     video_id: str
     chat_id: str
     chat_next_page_token: str | None = None
-    chat_joined_event: asyncio.Event = asyncio.Event()
+    chat_joined_event: asyncio.Event = field(default_factory=asyncio.Event)

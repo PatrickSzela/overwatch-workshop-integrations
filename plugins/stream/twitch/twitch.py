@@ -3,7 +3,8 @@ from argparse import ArgumentParser, Namespace
 from pathlib import PurePath
 from typing import TypedDict
 
-from twitchAPI.chat import Chat, ChatMessage, EventData
+from twitchAPI.chat import Chat, EventData
+from twitchAPI.chat import ChatMessage as TwChatMessage
 from twitchAPI.oauth import UserAuthenticationStorageHelper
 from twitchAPI.object.api import TwitchUser
 from twitchAPI.twitch import Twitch as TwitchApi
@@ -133,7 +134,7 @@ class Twitch(IStream):
     #     logger.info("Joined %s's channel!", self._channel)
 
     async def _on_message(self, data: EventData):
-        if not isinstance(data, ChatMessage):
+        if not isinstance(data, TwChatMessage):
             return
 
         room_name = data.room.name if data.room else "???"

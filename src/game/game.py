@@ -69,18 +69,20 @@ class Game:
         self._input_method = input_method
 
         def on_log_create(_: str):
-            self._connection = OWTP(
-                input_method=self._input_method,
-                on_connect=self._on_connect,
-                on_disconnect=self._on_disconnect,
-                on_error=self._on_error,
-                on_log=self._on_log,
-                on_message=self._on_message,
-                on_register_supported_message=self._on_register_supported_message,
-                on_send_message_start=self._on_send_message_start,
-                on_send_message_finish=self._on_send_message_finish,
-                on_send_message_error=self._on_send_message_error,
+            self._connection = OWTP(self._input_method)
+            owtp = self._connection
+
+            owtp.events.connect.on(self._on_connect)
+            owtp.events.disconnect.on(self._on_disconnect)
+            owtp.events.connect_error.on(self._on_connect_error)
+            owtp.events.log.on(self._on_log)
+            owtp.events.message.on(self._on_message)
+            owtp.events.register_supported_message.on(
+                self._on_register_supported_message
             )
+            owtp.events.send_message_start.on(self._on_send_message_start)
+            owtp.events.send_message_finish.on(self._on_send_message_finish)
+            owtp.events.send_message_error.on(self._on_send_message_error)
 
             for msg in MESSAGES:
                 self._connection.register_message_in(msg)
@@ -169,7 +171,7 @@ class Game:
         for plugin in self._plugins:
             plugin.on_workshop_connect()
 
-    def _on_error(self):
+    def _on_connect_error(self):
         for plugin in self._plugins:
             plugin.on_workshop_connect_error()
 
@@ -195,21 +197,16 @@ class Game:
                 message.data["slot"],
             )
             self._register_player(player)
-
         elif is_message_in(message, GameStarted):
             self._mode = message.data["mode"]
             self._map = message.data["map"]
             self._set_state(GameState.STARTED)
-
         elif is_message_in(message, GameInProgress):
             self._set_state(GameState.IN_PROGRESS)
-
         elif is_message_in(message, GameInBetweenRounds):
             self._set_state(GameState.IN_BETWEEN_ROUNDS)
-
         elif is_message_in(message, GameFinished):
             self._set_state(GameState.FINISHED)
-
         else:
             # TODO: info if message wasn't handled
             for plugin in self._plugins:

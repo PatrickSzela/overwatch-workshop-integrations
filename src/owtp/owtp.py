@@ -3,10 +3,10 @@ import json
 from collections.abc import Callable
 from typing import Any, Mapping
 
-from ..helpers import empty_fn, is_key_value_pair, key_value_pair_to_dict
+from ..helpers import EventListener, is_key_value_pair, key_value_pair_to_dict
 from ..input import IInput
 from ..logging import create_logger
-from . import messages
+from . import SupportedMessageDefinition, messages
 from .message import (
     DefineMessageIn,
     DefineMessageOut,
@@ -29,27 +29,31 @@ DELAY_BEFORE_NEXT_INPUTS = TICK * 2
 type Response = tuple[MessageIn, asyncio.Event]
 
 
+class OWTPEvents:
+    def __init__(self) -> None:
+        self.connect = EventListener[[]]()
+        self.disconnect = EventListener[[]]()
+        self.connect_error = EventListener[[]]()
+        self.log = EventListener[[str]]()
+        self.message = EventListener[[MessageIn]]()
+        self.register_supported_message = EventListener[
+            [SupportedMessageDefinition]
+        ]()
+        self.send_message_start = EventListener[[MessageOut]]()
+        self.send_message_finish = EventListener[[MessageOut]]()
+        self.send_message_error = EventListener[[MessageOut, str]]()
+
+
 class OWTP:
     def __init__(
         self,
         input_method: IInput,
-        on_connect: Callable[[], None] = empty_fn,
-        on_disconnect: Callable[[], None] = empty_fn,
-        on_error: Callable[[], None] = empty_fn,
-        on_log: Callable[[str], None] = empty_fn,
-        on_message: Callable[[MessageIn], None] = empty_fn,
-        on_register_supported_message: Callable[
-            [messages.SupportedMessageDefinition], None
-        ] = empty_fn,
-        on_send_message_start: Callable[[MessageOut], None] = empty_fn,
-        on_send_message_finish: Callable[[MessageOut], None] = empty_fn,
-        on_send_message_error: Callable[[MessageOut, str], None] = empty_fn,
     ):
         self._connected = False
         self._interactive = False
         self._message_being_sent: MessageOut | None = None
         self._registered_supported_messages: dict[
-            str, messages.SupportedMessageDefinition
+            str, SupportedMessageDefinition
         ] = {}
         self._registered_messages_in: dict[str, DefineMessageIn[Any]] = {}
 
@@ -73,15 +77,7 @@ class OWTP:
         self._send_message_task: asyncio.Task[Any] | None = None
 
         self._input_method = input_method
-        self.on_connect = on_connect
-        self.on_disconnect = on_disconnect
-        self.on_error = on_error
-        self.on_log = on_log
-        self.on_message = on_message
-        self.on_register_supported_message = on_register_supported_message
-        self.on_send_message_start = on_send_message_start
-        self.on_send_message_finish = on_send_message_finish
-        self.on_send_message_error = on_send_message_error
+        self.events = OWTPEvents()
 
         for message in messages.SUPPORTED_MESSAGES:
             self._register_supported_message(message)
@@ -123,14 +119,14 @@ class OWTP:
         def on_connected():
             self._connected = True
             logger.info("Successfully connected with the Workshop mode")
-            self.on_connect()
+            self.events.connect.emit()
 
         def on_not_connected():
             self._connected = False
             logger.warning(
                 "Failed to establish connection with the Workshop mode"
             )
-            self.on_error()
+            self.events.connect_error.emit()
 
         self.send_message(
             messages.ConnectResponse(
@@ -148,12 +144,10 @@ class OWTP:
             return
 
         logger.info("Workshop mode requested disconnect...")
-        self.on_disconnect()
+        self.events.disconnect.emit()
         self._connected = False
 
-    def _register_supported_message(
-        self, data: messages.SupportedMessageDefinition
-    ):
+    def _register_supported_message(self, data: SupportedMessageDefinition):
         logger.debug(
             'Registering supported message "%s", id: %s, data types: %s',
             data.name,
@@ -161,7 +155,7 @@ class OWTP:
             data.data_types,
         )
         self._registered_supported_messages[data.name] = data
-        self.on_register_supported_message(data)
+        self.events.register_supported_message.emit(data)
 
     def register_message_in(self, cls: DefineMessageIn):
         if cls.name in self._registered_messages_in:
@@ -240,14 +234,14 @@ class OWTP:
                 msg.packets,
             )
             msg.state = MessageOutState.SENDING
-            self.on_send_message_start(msg)
+            self.events.send_message_start.emit(msg)
 
             fail_reason = await self._send_with_retries(msg)
 
             if fail_reason:
                 logger.warning(fail_reason)
                 msg.state = MessageOutState.ERROR
-                self.on_send_message_error(msg, fail_reason)
+                self.events.send_message_error.emit(msg, fail_reason)
 
             self._messages_queue.task_done()
 
@@ -317,7 +311,7 @@ class OWTP:
         )
 
         message.state = MessageOutState.SENT
-        self.on_send_message_finish(message)
+        self.events.send_message_finish.emit(message)
 
     async def _wait_for_response(
         self,
@@ -396,7 +390,7 @@ class OWTP:
             name, data = self._parse_workshop_output(line)
         except Exception:
             logger.info('Workshop log: "%s"', line)
-            self.on_log(line)
+            self.events.log.emit(line)
             return
 
         message_class = self._registered_messages_in.get(name)
@@ -422,7 +416,7 @@ class OWTP:
             self._disconnect()
         elif is_message_in(message, messages.SupportsMessage):
             self._register_supported_message(
-                messages.SupportedMessageDefinition(**message.data)
+                SupportedMessageDefinition(**message.data)
             )
         elif is_message_in(message, messages.ConfirmMessage):
             await self._pass_response_and_wait(message)
@@ -433,6 +427,6 @@ class OWTP:
         elif is_message_in(message, messages.TransmissionNotReadyMessage):
             self._pause_sending_messages(True)
         else:
-            self.on_message(message)
+            self.events.message.emit(message)
 
     # endregion

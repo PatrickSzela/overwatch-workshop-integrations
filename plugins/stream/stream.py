@@ -1,11 +1,13 @@
 import asyncio
 from abc import ABC, abstractmethod
 from argparse import Namespace
-from typing import Any, Callable, TypedDict
+from dataclasses import dataclass
+from typing import Any, TypedDict
 
 from src import (
     DefineMessageIn,
     EmptyData,
+    EventListener,
     GameState,
     IPlugin,
     MessageIn,
@@ -25,15 +27,26 @@ SendMessage: DefineMessageIn[SendMessageData] = define_message_in(
 BOT_NAME = "Overwatch Stream Integration Bot"
 
 
+@dataclass
+class ChatMessage:
+    content: str
+    user: str
+    chatroom: str
+    service: str
+
+
+class StreamEvents:
+    def __init__(self) -> None:
+        self.message = EventListener[ChatMessage]()
+
+
 class IStream(IPlugin, ABC):
     @abstractmethod
     def __init__(self, args: Namespace, config: Any):
         super().__init__(args, config)
 
         self._loop = asyncio.get_event_loop()
-        self._on_message_listeners: list[
-            Callable[[str, str, str, str], None]
-        ] = []
+        self.events = StreamEvents()
 
     def incoming_messages(self) -> list[DefineMessageIn[Any]]:
         return [SendMessage]
@@ -47,16 +60,6 @@ class IStream(IPlugin, ABC):
         if self.is_connected():
             await self.send_message(f"{BOT_NAME}, signing off... o7")
             await self.disconnect()
-
-    def add_message_listener(
-        self, callback: Callable[[str, str, str, str], None]
-    ):
-        self._on_message_listeners.append(callback)
-
-    def remove_message_listener(
-        self, callback: Callable[[str, str, str, str], None]
-    ):
-        self._on_message_listeners.remove(callback)
 
     @abstractmethod
     async def connect(self):
@@ -78,8 +81,9 @@ class IStream(IPlugin, ABC):
         asyncio.run_coroutine_threadsafe(self.send_message(message), self._loop)
 
     def on_message(self, message: str, user: str, chatroom: str):
-        for listener in self._on_message_listeners:
-            listener(message, user, chatroom, self.name)
+        self.events.message.emit(
+            ChatMessage(message, user, chatroom, self.name)
+        )
 
     def on_workshop_connect(self):
         self.send_message_nowait(
@@ -92,11 +96,6 @@ class IStream(IPlugin, ABC):
     def on_workshop_message(self, message: MessageIn[EmptyData]):
         if is_message_in(message, SendMessage):
             self.send_message_nowait(message.data["message"])
-
-    # def on_workshop_send_message_error(
-    #     self, message: MessageOut[EmptyData], reason: str
-    # ):
-    #     self.send_message_nowait(f"Failed to send a message: {message.name}!")
 
     def on_game_state_change(self, state: GameState):
         if not self.game:

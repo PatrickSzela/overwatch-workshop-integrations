@@ -4,7 +4,7 @@ from argparse import Namespace
 from collections import Counter
 from typing import Any, TypedDict
 
-from plugins.stream import IStream
+from plugins.stream import ChatMessage, IStream
 from src import (
     DefineMessageIn,
     DefineMessageOut,
@@ -60,7 +60,7 @@ class Poll(IPlugin):
     async def initialize(self, plugins: list[IPlugin]):
         for plugin in plugins:
             if isinstance(plugin, IStream):
-                plugin.add_message_listener(self.on_message)
+                plugin.events.message.on(self.on_message)
                 self._streams.append(plugin)
 
     async def cleanup(self):
@@ -68,7 +68,7 @@ class Poll(IPlugin):
         #     self.cancel_poll("Exiting")
 
         for stream in self._streams:
-            stream.remove_message_listener(self.on_message)
+            stream.events.message.off(self.on_message)
 
     def incoming_messages(self) -> list[DefineMessageIn[Any]]:
         return [PollStart, PollEnd, PollCancel]
@@ -77,11 +77,11 @@ class Poll(IPlugin):
         for stream in self._streams:
             stream.send_message_nowait(message)
 
-    def on_message(self, message: str, user: str, chatroom: str, service: str):
-        msg = message.strip()
+    def on_message(self, message: ChatMessage):
+        msg = message.content.strip()
 
         if msg.isnumeric() and self._in_progress:
-            self.add_vote(msg, user, chatroom, service)
+            self.add_vote(msg, message.user, message.chatroom, message.service)
 
     def start_poll(self, choices: list[str], timeout: float):
         if self._in_progress:

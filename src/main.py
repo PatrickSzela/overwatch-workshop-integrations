@@ -51,8 +51,8 @@ async def _logic():
             )
             plugins.append(plugin(args, cfg))
 
-    for plugin in plugins:
-        await plugin.initialize(plugins)
+    logger.info("Loaded plugins: %s", [plugin.name for plugin in plugins])
+    await asyncio.gather(*(plugin.initialize(plugins) for plugin in plugins))
 
     game = Game(
         overwatch_dir=config.config["main"]["overwatch_dir"],

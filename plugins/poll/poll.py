@@ -190,7 +190,7 @@ class Poll(IPlugin):
     def on_workshop_message(self, message: MessageIn[EmptyData]):
         if is_message_in(message, PollStart):
             timeout, choices = message.data["timeout"], message.data["choices"]
-            self.start_poll(choices=choices, timeout=timeout)
+            self.start_poll(choices, timeout)
 
         elif is_message_in(message, PollEnd):
             self.end_poll()

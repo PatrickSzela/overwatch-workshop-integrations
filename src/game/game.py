@@ -3,6 +3,7 @@
 import asyncio
 from typing import Any, TypedDict
 
+from ..file_watcher import WorkshopLogFileWatcher
 from ..input import IInput
 from ..logging import create_logger
 from ..owtp import (
@@ -15,7 +16,6 @@ from ..owtp import (
     is_message_in,
 )
 from ..plugin import IPlugin
-from ..workshop_log import WorkshopLogWatcher
 from .player import Player
 from .state import GameState
 
@@ -107,12 +107,12 @@ class Game:
                 self._connection.cleanup()
                 self._connection = None
 
-        self.workshop_log_watcher = WorkshopLogWatcher(
-            directory=overwatch_dir,
-            loop=asyncio.get_running_loop(),
-            on_create=on_log_create,
-            on_modify=on_log_modify,
-            on_close=on_log_close,
+        self.workshop_log_watcher = WorkshopLogFileWatcher(
+            overwatch_dir,
+            asyncio.get_running_loop(),
+            on_log_create,
+            on_log_modify,
+            on_log_close,
         )
 
         for plugin in self._plugins:

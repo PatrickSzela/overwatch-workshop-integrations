@@ -159,12 +159,12 @@ def define_message_out[T: Mapping[str, Any] = EmptyData](
         on_error: Callable[[], None] | None = None,
     ) -> MessageOut[T]:
         return MessageOut(
-            name=name,
-            data=data if data is not None else cast(T, {}),
-            number_of_attempts=number_of_attempts,
-            on_start=on_start,
-            on_finish=on_finish,
-            on_error=on_error,
+            name,
+            data if data is not None else cast(T, {}),
+            number_of_attempts,
+            on_start,
+            on_finish,
+            on_error,
         )
 
     setattr(creator, "name", name)

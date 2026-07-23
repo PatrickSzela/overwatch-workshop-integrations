@@ -29,7 +29,7 @@ def define_message_in[T: Mapping[str, Any] = EmptyData](
 
     def creator(data: T | None = None) -> MessageIn[T]:
         final_data = data if data is not None else cast(T, {})
-        return MessageIn(name=name, data=final_data)
+        return MessageIn(name, final_data)
 
     setattr(creator, "name", name)
 

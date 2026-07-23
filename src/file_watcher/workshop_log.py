@@ -3,12 +3,12 @@ import os
 from collections.abc import Callable
 
 from ..logging import create_logger
-from .text_file_watcher import TextFileWatcher
+from .text import TextFileWatcher
 
 logger = create_logger("WSLogWatcher")
 
 
-class WorkshopLogWatcher(TextFileWatcher):
+class WorkshopLogFileWatcher(TextFileWatcher):
     def __init__(
         self,
         directory: str,

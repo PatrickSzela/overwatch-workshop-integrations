@@ -51,7 +51,7 @@ class Test(IPlugin):
             raise RuntimeError("Missing connection")
 
         if is_message_in(message, EchoMessage):
-            self.owtp.send_message(EchoResponse(message.data))
+            self.owtp.add_message(EchoResponse(message.data))
 
     def on_workshop_send_message_start(self, message: MessageOut):
         logger.info(

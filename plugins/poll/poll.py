@@ -125,7 +125,7 @@ class Poll(IPlugin):
         def on_finish():
             self._in_progress = False
 
-        self.owtp.send_message(
+        self.owtp.add_message(
             PollWinner(
                 {"winnerIdx": winner}, on_finish=on_finish, on_error=on_finish
             )

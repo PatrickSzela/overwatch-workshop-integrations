@@ -42,7 +42,7 @@ class Websocket(IPlugin):
 
             match message:
                 case {"name": str() as name, "data": dict() as data}:  # pyright: ignore[reportUnknownVariableType]
-                    self.owtp.send_message(MessageOut(name, data))  # pyright: ignore[reportUnknownArgumentType, reportArgumentType]
+                    self.owtp.add_message(MessageOut(name, data))  # pyright: ignore[reportUnknownArgumentType, reportArgumentType]
                 case _:
                     raise TypeError(f"Invalid message structure: {message}")
 

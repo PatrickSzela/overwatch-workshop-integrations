@@ -82,19 +82,24 @@ class YouTube(IStream):
 
         video_ids = self._video_ids
 
+        # TODO: parallelize this
         for handle in self._channel_handles:
             handle = handle if handle.startswith("@") else f"@{handle}"
 
             try:
-                channel_id = self._youtube.get_channel_id_from_handle(handle)
-                video_id = self._youtube.get_live_stream_video_id(channel_id)
+                channel_id = await self._youtube.get_channel_id_from_handle(
+                    handle
+                )
+                video_id = await self._youtube.get_live_stream_video_id(
+                    channel_id
+                )
                 video_ids.add(video_id)
             except BaseException as e:
                 raise RuntimeError(
                     f"Failed to get an active stream for channel with handle {handle} - if the stream is unlisted or private, provide video ID instead"
                 ) from e
 
-        self._streams = self._youtube.get_live_streams(list(video_ids))
+        self._streams = await self._youtube.get_live_streams(list(video_ids))
 
         await self._youtube.connect()
         logger.info("Successfully connected to YouTube")
@@ -123,9 +128,7 @@ class YouTube(IStream):
         if self._youtube:
             try:
                 for msg in messages:
-                    await asyncio.to_thread(
-                        self._youtube.send_message, self._streams, msg
-                    )
+                    await self._youtube.send_message(self._streams, msg)
             except BaseException as e:
                 logger.warning("Failed to send message in chat: %s", repr(e))
         else:

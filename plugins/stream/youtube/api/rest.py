@@ -1,5 +1,6 @@
 """Module for a wrapper around REST part of YouTube API v3"""
 
+import asyncio
 import json
 from abc import ABC
 from enum import StrEnum
@@ -17,11 +18,28 @@ from ..stream import YouTubeStream
 logger = create_logger("YouTube.REST")
 
 
-# import logging
-# log = logging.getLogger("urllib3")
-# log.setLevel(logging.DEBUG)
-
 URL = "https://www.googleapis.com/youtube/v3"
+
+
+class YouTubeRestError(Exception):
+    def __init__(self, response: requests.Response):
+        self.response = response
+        self.status_code = response.status_code
+        self.message = "Unknown error"
+        self.status = "UNKNOWN"
+
+        try:
+            data = response.json()
+            self.message = data["error"]["message"]
+            self.status = data["error"]["status"]
+        except Exception:
+            pass
+
+    def __repr__(self):
+        return f"YouTubeRestError('{self.status_code} {self.status}: {self.message})'"
+
+    def __str__(self):
+        return f"{self.status_code} {self.status} - {self.message}"
 
 
 class YouTubeRestEndpoint(StrEnum):
@@ -38,7 +56,7 @@ class YouTubeRestApi(ABC):
 
     _credentials: Credentials
 
-    def _call(
+    async def _call(
         self,
         method: HTTPMethod,
         endpoint: YouTubeRestEndpoint,
@@ -49,7 +67,8 @@ class YouTubeRestApi(ABC):
 
         refresh_credentials_if_necessary(self._credentials)
 
-        response = requests.request(
+        response = await asyncio.to_thread(
+            requests.request,
             method=method.value,
             url=f"{URL}/{endpoint.value}",
             params=params,
@@ -58,16 +77,19 @@ class YouTubeRestApi(ABC):
             timeout=3,
         )
 
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            raise YouTubeRestError(e.response) from e
 
         return response.json()
 
-    def get_channel_id_from_handle(self, handle: str):
+    async def get_channel_id_from_handle(self, handle: str):
         """
         Retrieve channel ID for channel with `handle`.
         """
 
-        channels = self._call(
+        channels = await self._call(
             method=HTTPMethod.GET,
             endpoint=YouTubeRestEndpoint.CHANNELS,
             params={"part": "id,snippet", "forHandle": handle},
@@ -81,7 +103,7 @@ class YouTubeRestApi(ABC):
                     f"Failed to find a channel for handle {handle}"
                 )
 
-    def get_live_stream_video_id(self, channel_id: str):
+    async def get_live_stream_video_id(self, channel_id: str):
         """
         Retrieve video ID of latest live stream (running or not) in the "Live" tab for channel with ID `channel_id`.
 
@@ -92,7 +114,7 @@ class YouTubeRestApi(ABC):
         - use expensive `/search` endpoint.
         """
 
-        playlist_items = self._call(
+        playlist_items = await self._call(
             method=HTTPMethod.GET,
             endpoint=YouTubeRestEndpoint.PLAYLIST_ITEMS,
             params={
@@ -114,7 +136,7 @@ class YouTubeRestApi(ABC):
                     f"Failed to retrieve ID of latest live stream for channel with ID {channel_id}"
                 )
 
-    def get_live_streams(self, video_ids: list[str]):
+    async def get_live_streams(self, video_ids: list[str]):
         """Generate `YouTubeStream` wrappers for specified video IDs `video_ids`."""
 
         streams: list[YouTubeStream] = []
@@ -124,7 +146,7 @@ class YouTubeRestApi(ABC):
             "id": ",".join(video_ids),
         }
 
-        videos = self._call(
+        videos = await self._call(
             method=HTTPMethod.GET,
             endpoint=YouTubeRestEndpoint.VIDEOS,
             params=data,
@@ -172,7 +194,7 @@ class YouTubeRestApi(ABC):
 
         return streams
 
-    def send_message(
+    async def send_message(
         self,
         streams: YouTubeStream | list[YouTubeStream],
         message: str,
@@ -189,16 +211,20 @@ class YouTubeRestApi(ABC):
             )
             message = message[:200]
 
-        for stream in streams:
-            self._call(
-                method=HTTPMethod.POST,
-                endpoint=YouTubeRestEndpoint.LIVE_CHAT_MESSAGES,
-                params={"part": "snippet"},
-                body={
-                    "snippet": {
-                        "liveChatId": stream.chat_id,
-                        "type": "textMessageEvent",
-                        "textMessageDetails": {"messageText": message},
-                    }
-                },
+        await asyncio.gather(
+            *(
+                self._call(
+                    method=HTTPMethod.POST,
+                    endpoint=YouTubeRestEndpoint.LIVE_CHAT_MESSAGES,
+                    params={"part": "snippet"},
+                    body={
+                        "snippet": {
+                            "liveChatId": stream.chat_id,
+                            "type": "textMessageEvent",
+                            "textMessageDetails": {"messageText": message},
+                        }
+                    },
+                )
+                for stream in streams
             )
+        )

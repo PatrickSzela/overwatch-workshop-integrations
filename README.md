@@ -109,6 +109,20 @@ Useful for unlisted or private streams. You can easily retrieve video ID from th
 python ./main.py --yt-vid S9uTScSgzrM
 ```
 
+#### Join multiple Twitch chats:
+
+It is encouraged to instead ask the streamers to enable Shared Chat and join only one chat to reduce token usage.
+
+```sh
+python ./main.py --ttv karq emongg ml7support
+```
+
+#### Join multiple Twitch and YouTube chats at the same time:
+
+```sh
+python ./main.py --ttv karq emongg ml7support --yt karq emongg ml7support
+```
+
 #### See all available options:
 
 ```sh

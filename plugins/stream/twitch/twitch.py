@@ -36,7 +36,7 @@ class Twitch(IStream):
         super().__init__(args, config)
 
         self._config = config
-        self._channel = args.twitch_channel
+        self._channels: list[str] = list(set(args.twitch_channels))
 
         self._twitch: TwitchApi | None = None
         self._chat: Chat | None = None
@@ -53,10 +53,12 @@ class Twitch(IStream):
         group.add_argument(
             "--ttv",
             "--twitch",
-            "--twitch-channel",
-            help="channel to which the bot should join to",
+            "--twitch-channels",
+            help="channels to which the bot should join to",
             type=str,
-            dest="twitch_channel",
+            action="extend",
+            nargs="+",
+            dest="twitch_channels",
             metavar="CHANNEL",
         )
 
@@ -95,12 +97,12 @@ class Twitch(IStream):
         # self._chat.register_command("vote", self._on_vote)
 
         self._chat.start()
-        not_joined: list[str] = await self._chat.join_room(self._channel)
+        not_joined: list[str] = await self._chat.join_room(self._channels)  # pyright: ignore[reportUnknownVariableType]
 
-        if self._channel in not_joined:
-            raise RuntimeError(f"Failed to join {self._channel}'s channel")
+        if not_joined:
+            raise RuntimeError(f"Failed to join channels: {not_joined}")
 
-        logger.info("Joined %s's channel", self._channel)
+        logger.info("Successfully joined channels: %s", self._channels)
 
     async def disconnect(self):
         if self._chat and self._chat.is_connected():
@@ -121,7 +123,12 @@ class Twitch(IStream):
 
         if self._chat and self._chat.is_connected():
             try:
-                await self._chat.send_message(self._channel, f"/me {message}")
+                await asyncio.gather(
+                    *(
+                        self._chat.send_message(channel, f"/me {message}")
+                        for channel in self._channels
+                    )
+                )
             except BaseException as e:
                 logger.warning("Failed to send message in chat: %s", repr(e))
         else:

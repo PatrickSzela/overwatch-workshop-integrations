@@ -41,6 +41,8 @@ class YouTube(IStream):
 
     @staticmethod
     def add_arguments(parser: ArgumentParser):
+        IStream.add_arguments(parser)
+
         group = parser.add_argument_group("YouTube Live Stream integration")
 
         group.add_argument(
@@ -121,6 +123,9 @@ class YouTube(IStream):
         return False
 
     async def send_message(self, message: str):
+        if self.silent:
+            return
+
         messages = message.split("\n")
         message = message.replace("\n", " ")
         logger.debug('Sending message in chat: "%s"', message)

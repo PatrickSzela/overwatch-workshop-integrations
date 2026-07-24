@@ -1,6 +1,6 @@
 import asyncio
 from abc import ABC, abstractmethod
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
 from typing import Any, TypedDict
 
@@ -47,6 +47,20 @@ class IStream(IPlugin, ABC):
 
         self._loop = asyncio.get_event_loop()
         self.events = StreamEvents()
+        self.silent = args.stream_silent
+
+    @staticmethod
+    def add_arguments(parser: ArgumentParser):
+        title = "Stream integrations"
+
+        if not any(group.title == title for group in parser._action_groups):  # pylint: disable=W0212
+            group = parser.add_argument_group(title)
+
+            group.add_argument(
+                "--stream-silent",
+                help="do not send any messages in chats the bot is connected to",
+                action="store_true",
+            )
 
     def incoming_messages(self) -> list[DefineMessageIn[Any]]:
         return [SendMessage]
@@ -62,11 +76,11 @@ class IStream(IPlugin, ABC):
             await self.disconnect()
 
     @abstractmethod
-    async def connect(self):
+    async def connect(self) -> None:
         pass
 
     @abstractmethod
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         pass
 
     @abstractmethod
@@ -74,30 +88,30 @@ class IStream(IPlugin, ABC):
         return False
 
     @abstractmethod
-    async def send_message(self, message: str):
+    async def send_message(self, message: str) -> None:
         pass
 
-    def send_message_nowait(self, message: str):
+    def send_message_nowait(self, message: str) -> None:
         asyncio.run_coroutine_threadsafe(self.send_message(message), self._loop)
 
-    def on_message(self, message: str, user: str, chatroom: str):
+    def on_message(self, message: str, user: str, chatroom: str) -> None:
         self.events.message.emit(
             ChatMessage(message, user, chatroom, self.name)
         )
 
-    def on_workshop_connect(self):
+    def on_workshop_connect(self) -> None:
         self.send_message_nowait(
             "Successfully established connection with the Workshop mode!"
         )
 
-    def on_workshop_connect_error(self):
+    def on_workshop_connect_error(self) -> None:
         self.send_message_nowait("Failed to connect with the Workshop mode!")
 
-    def on_workshop_message(self, message: MessageIn[EmptyData]):
+    def on_workshop_message(self, message: MessageIn[EmptyData]) -> None:
         if is_message_in(message, SendMessage):
             self.send_message_nowait(message.data["message"])
 
-    def on_game_state_change(self, state: GameState):
+    def on_game_state_change(self, state: GameState) -> None:
         if not self.game:
             raise RuntimeError("Missing game instance")
 

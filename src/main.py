@@ -3,11 +3,12 @@ import asyncio
 import threading
 from argparse import ArgumentParser
 from typing import Any, cast
+import logging
 
 from .config import Config
 from .game import Game
 from .input import initialize as initialize_input
-from .logging import create_logger
+from .logging import create_logger, set_log_level
 from .plugin import IPlugin, load_plugins
 
 logger = create_logger("Main")
@@ -19,12 +20,20 @@ async def _logic():
         description="A proof-of-concept application that allows to control Custom Game's state from external sources",
     )
 
+    parser.add_argument(
+        "-d",
+        "--debug",
+        help="enable output of debug messages to terminal",
+        action="store_true",
+    )
+
     plugin_classes = load_plugins()
 
     for plugin in plugin_classes:
         plugin.add_arguments(parser)
 
     args = parser.parse_args()
+    set_log_level(logging.DEBUG if args.debug else logging.INFO)
     input_method = await initialize_input()
 
     config = Config(plugin_classes)

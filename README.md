@@ -8,6 +8,7 @@ A proof-of-concept application enabling control of Custom Games from external so
 ### Currently supported integrations:
 
 - Twitch
+- YouTube Live Stream
 
 ## Requirements
 
@@ -40,7 +41,9 @@ A proof-of-concept application enabling control of Custom Games from external so
 2. Create and activate Python virtual environment
 3. Install dependencies:
    `pip install -r requirements.txt`
-4. **For Linux users:** Install [ydotool](https://github.com/ReimuNotMoe/ydotool) (and, optionally, [configure it to not require root privileges](https://github.com/ideasman42/nerd-dictation/blob/main/readme-ydotool.rst#configuring-ydotool))
+4. **For Linux users:**
+   - Wayland or X11: install [ydotool](https://github.com/ReimuNotMoe/ydotool) (and, optionally, [configure it to not require root privileges](https://github.com/ideasman42/nerd-dictation/blob/main/readme-ydotool.rst#configuring-ydotool))
+   - X11 or [nested Wayland compositor](#nested-wayland-compositor): install [xdotool](https://github.com/jordansissel/xdotool)
 
 Additionally:
 
@@ -81,8 +84,11 @@ Additionally:
 ## Usage
 
 1. Activate the Python virtual environment if it's not active already
-2. Execute the `main.py` script with your desired options (see [Examples](#Examples) below)
-3. **For Linux users:** start Ydotool daemon `ydotoold`
+2. **For Linux users:**
+   - Wayland: start Ydotool daemon `ydotoold`
+   - Nested Wayland compositor: start a [nested Wayland compositor](#nested-wayland-compositor)
+     - for KWin Wayland (KDE Plasma 6) you can use a premade script `scripts/kwin_nested_start.py`
+3. Execute the `main.py` script with your desired options (see [Examples](#Examples) below)
 4. Start a Custom Game that supports this application (for example [Mystery Modifiers](https://workshop.codes/mystery-modifiers)). Don't forget to move yourself to a spectator slot!
 
 ### Examples
@@ -128,6 +134,21 @@ python ./main.py --ttv karq emongg ml7support --yt karq emongg ml7support
 ```sh
 python ./main.py --help
 ```
+
+### Nested Wayland compositor
+
+On Linux, to avoid having the game window continuously focused, we can utilize a nested Wayland compositor and forward any inputs to it. For more information, see [What's the deal with nested Wayland compositor?](#whats-the-deal-with-nested-wayland-compositor)
+
+Before starting the script and the game:
+
+1. Start nested Wayland compositor:
+   - for KWin Wayland (KDE Plasma 6): start `scripts/kwin_nested_start.py`
+   - for others: see documentation about your compositor
+2. Start Overwatch with proper `WAYLAND_DISPLAY` and/or `DISPLAY` environmental variables
+   - for KWin Wayland: these variables will be shown in terminal
+3. Execute the `main.py` script with your desired options. If everything went correctly, you should see `[Input] Using "wayland_nested_xdotool" for sending inputs` in the output.
+4. After starting the game, accept remote control request inside of the nested Wayland compositor - do not worry, the remote control is not really remote, no one from outside will have ability to control it or see anything.
+5. Once finished with the application, don't forget to remove the environmental variables, otherwise the game window will not show up or the game will not boot up at all.
 
 ## How does this app works?
 
@@ -178,3 +199,9 @@ The app is still in early stages of development and there might be changes to ho
 ### Can I get banned for using this application?
 
 I can't give a definitive answer to this question, but the chances of that happening are very low. I've personally hosted Custom Game lobbies in the past that utilized this application (shoutout to KarQ), and my account is still in a good standing. Just to be safe, make sure to close this app once you've finished hosting the Custom Game.
+
+### What's the deal with nested Wayland compositor?
+
+The biggest issue with the way of how this application communicated with Workshop is the requirement of having continuously focused game window and not interacting with it while message is being sent. To workaround the 1st issue, on Linux we can utilize a nested Wayland compositor - we will just run the game inside of it and forward inputs directly to that nested compositor, allowing the user to normally interact with their PC.
+
+For now, only one premade script exists for KWin Wayland (default compositor of KDE Plasma 6). For others, visit documentation for your desktop environment's compositor and follow the steps of `scripts/kwin_nested_start.py`.

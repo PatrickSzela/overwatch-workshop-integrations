@@ -14,9 +14,12 @@ class KeyboardMouse(IInput):
     logger = create_logger("Input.KbdMouse")
     key_map = KEY_MAP
 
-    @staticmethod
-    async def is_supported():
-        return platform.system() == "Windows"
+    @classmethod
+    async def is_supported(cls):
+        if platform.system() != "Windows":
+            return "not a Windows OS"
+
+        return True
 
     def _press_buttons(
         self, keyboard: list[str], mouse: list[str], is_press: bool

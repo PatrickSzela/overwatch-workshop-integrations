@@ -42,9 +42,9 @@ class IInput(ABC):
     def list_keys(self):
         return self.key_map.keys()
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    async def is_supported() -> bool:
+    async def is_supported(cls) -> bool | str:
         pass
 
     @abstractmethod

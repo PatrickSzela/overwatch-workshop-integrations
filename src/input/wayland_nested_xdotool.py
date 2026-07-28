@@ -7,8 +7,8 @@ class WaylandNestedXdotool(IWaylandNested, Xdotool):
     name = "wayland_nested_xdotool"
     logger = create_logger("Input.WLNestXdo")
 
-    @staticmethod
-    async def is_supported() -> bool:
+    @classmethod
+    async def is_supported(cls):
         return (
             await IWaylandNested.is_supported() and await Xdotool.is_supported()
         )

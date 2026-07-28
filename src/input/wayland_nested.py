@@ -13,14 +13,16 @@ XWAYLAND_SOCKET_PATH = Path("/tmp/.X11-unix/", f"X{XWAYLAND_DISPLAY}")
 
 
 class IWaylandNested(IInput):
-    @staticmethod
-    async def is_supported() -> bool:
-        if (
-            platform.system() != "Linux"
-            or not os.path.exists(WAYLAND_SOCKET_PATH)
-            or not os.path.exists(XWAYLAND_SOCKET_PATH)
-        ):
-            return False
+    @classmethod
+    async def is_supported(cls):
+        if platform.system() != "Linux":
+            return "not a Linux OS"
+
+        if not os.path.exists(WAYLAND_SOCKET_PATH):
+            return f"'{WAYLAND_SOCKET_PATH}' Wayland socket doesn't exists"
+
+        if not os.path.exists(XWAYLAND_SOCKET_PATH):
+            return f"'{XWAYLAND_SOCKET_PATH}' XWayland socket doesn't exists"
 
         os.environ["WAYLAND_DISPLAY"] = WAYLAND_SOCKET
         os.environ["DISPLAY"] = f":{XWAYLAND_DISPLAY}"

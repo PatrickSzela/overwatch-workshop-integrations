@@ -13,13 +13,18 @@ class Xdotool(IInput):
     command = "xdotool"
     key_map = KEY_MAP
 
-    @staticmethod
-    async def is_supported() -> bool:
-        return (
-            platform.system() == "Linux"
-            and shutil.which(Xdotool.command) is not None
-            and "DISPLAY" in os.environ
-        )
+    @classmethod
+    async def is_supported(cls):
+        if platform.system() != "Linux":
+            return "not a Linux OS"
+
+        if shutil.which(cls.command) is None:
+            return f"'{cls.command}' executable not found"
+
+        if "DISPLAY" not in os.environ:
+            return "'DISPLAY' environmental variable not set"
+
+        return True
 
     def create_task(self, keys: list[str | int], is_press: bool):
         cmd: list[str] = [self.command]

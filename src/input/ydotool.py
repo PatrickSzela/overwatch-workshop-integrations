@@ -13,12 +13,15 @@ class Ydotool(IInput):
     command = "ydotool"
     key_map = KEY_MAP
 
-    @staticmethod
-    async def is_supported():
-        return (
-            platform.system() == "Linux"
-            and shutil.which(Ydotool.command) is not None
-        )
+    @classmethod
+    async def is_supported(cls):
+        if platform.system() != "Linux":
+            return "not a Linux OS"
+
+        if shutil.which(cls.command) is None:
+            return f"'{cls.command}' executable not found"
+
+        return True
 
     async def initialize(self):
         processes = subprocess.check_output(["ps", "aux"]).decode()

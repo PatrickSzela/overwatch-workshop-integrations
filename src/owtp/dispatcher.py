@@ -21,16 +21,22 @@ if TYPE_CHECKING:
 logger = create_logger("OWTP.MsgSender")
 
 TICK = 0.016
-DELAY_BETWEEN_DOWN_AND_UP_BUTTONS = TICK * 3
-DELAY_BEFORE_NEXT_INPUTS = TICK * 3
 
 type Response = tuple[MessageIn, asyncio.Event]
 
 
 class MessageDispatcher:
-    def __init__(self, owtp: "OWTP", input_method: IInput):
+    def __init__(
+        self,
+        owtp: "OWTP",
+        input_method: IInput,
+        buttons_down_ticks: int,
+        buttons_up_ticks: int,
+    ):
         self._owtp = owtp
         self._input_method = input_method
+        self._buttons_down_ticks = buttons_down_ticks
+        self._buttons_up_ticks = buttons_up_ticks
 
         self._currently_sent_message: MessageOut | None = None
 
@@ -188,9 +194,9 @@ class MessageDispatcher:
     async def _send_and_confirm(self, message: MessageOut, attempt: int):
         for packet in message.packets:
             await self._input_method.send_input(
-                packet, DELAY_BETWEEN_DOWN_AND_UP_BUTTONS
+                packet, self._buttons_down_ticks * TICK
             )
-            await asyncio.sleep(DELAY_BEFORE_NEXT_INPUTS)
+            await asyncio.sleep(self._buttons_up_ticks * TICK)
 
         logger.debug(
             'Finished sending packets of message "%s", awaiting for confirmation...',

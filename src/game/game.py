@@ -56,7 +56,13 @@ class Game:
     "Manages and stores all the information about currently running Custom Game and :class:`IPlugin` plugins."
 
     def __init__(
-        self, overwatch_dir: str, plugins: list[IPlugin], input_method: IInput
+        self,
+        overwatch_dir: str,
+        plugins: list[IPlugin],
+        input_method: IInput,
+        buttons_down_ticks: int,
+        buttons_up_ticks: int,
+        **_: Any,
     ):
         super().__init__()
 
@@ -69,7 +75,9 @@ class Game:
         self._input_method = input_method
 
         def on_log_create(_: str):
-            self._connection = OWTP(self._input_method)
+            self._connection = OWTP(
+                self._input_method, buttons_down_ticks, buttons_up_ticks
+            )
             owtp = self._connection
 
             owtp.events.connect.on(self._on_connect)

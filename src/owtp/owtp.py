@@ -35,7 +35,12 @@ class OWTPEvents:
 
 
 class OWTP:
-    def __init__(self, input_method: IInput):
+    def __init__(
+        self,
+        input_method: IInput,
+        buttons_down_ticks: int,
+        buttons_up_ticks: int,
+    ):
         self.events = OWTPEvents()
 
         self._stop_event = asyncio.Event()
@@ -46,7 +51,9 @@ class OWTP:
         self._registered_messages_in: dict[str, DefineMessageIn[Any]] = {}
 
         self._connection = ConnectionManager(self)
-        self._sender = MessageDispatcher(self, input_method)
+        self._sender = MessageDispatcher(
+            self, input_method, buttons_down_ticks, buttons_up_ticks
+        )
         self._log_processor = WorkshopLogProcessor(self)
 
         for message in messages.SUPPORTED_MESSAGES:

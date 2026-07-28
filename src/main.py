@@ -98,7 +98,7 @@ async def _logic():
     await asyncio.gather(*(plugin.initialize(plugins) for plugin in plugins))
 
     game = Game(
-        overwatch_dir=config.config["main"]["overwatch_dir"],
+        **config.config["main"],
         plugins=plugins,
         input_method=input_method,
     )

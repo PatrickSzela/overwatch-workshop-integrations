@@ -7,6 +7,8 @@ from .logging import create_logger
 from .plugin import IPlugin
 from .utils import PROJECT_ROOT
 
+CONFIG_PATH = os.path.join(PROJECT_ROOT, "config.json")
+
 logger = create_logger("ConfigManager")
 
 
@@ -23,6 +25,8 @@ class KeybindsConfig(TypedDict):
 class MainConfig(TypedDict):
     overwatch_dir: str
     keybinds: KeybindsConfig
+    buttons_down_ticks: int
+    buttons_up_ticks: int
 
 
 class ConfigData(TypedDict):
@@ -44,8 +48,9 @@ DEFAULT_MAIN_CONFIG = MainConfig(
         os.sep.join(["~", "My Documents", "Overwatch"])
     ),
     keybinds=DEFAULT_KEYBINDS,
+    buttons_down_ticks=3,
+    buttons_up_ticks=3,
 )
-CONFIG_PATH = os.path.join(PROJECT_ROOT, "config.json")
 
 
 class Config:
@@ -54,7 +59,7 @@ class Config:
         self.config: ConfigData
 
     def default_config(self):
-        data: ConfigData = {"main": DEFAULT_MAIN_CONFIG}
+        data: ConfigData = ConfigData(main=DEFAULT_MAIN_CONFIG)
 
         for plugin in self.plugins:
             if plugin.config_structure():
@@ -81,12 +86,12 @@ class Config:
 
                 for plugin in self.plugins:
                     cls = plugin.config_structure()
-                    if cls:
-                        config[plugin.name.lower()] = cls(
-                            **data[plugin.name.lower()]
-                        )
+                    name = plugin.name.lower()
 
-                logger.info("Config loaded!")
+                    if cls:
+                        config[name] = cls(**data[name])
+
+                logger.info("Config loaded")
                 self.config = config
             except BaseException:
                 logger.warning(

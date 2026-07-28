@@ -9,7 +9,7 @@ from typing import Any, cast
 from .config import Config
 from .game import Game
 from .input import get_input_method, print_keys_diff
-from .logging import create_logger, set_log_level
+from .logging import create_logger, set_logging
 from .plugin import IPlugin, load_plugins
 
 logger = create_logger("Main")
@@ -48,9 +48,9 @@ async def _logic():
     args = parser.parse_args()
 
     if args.keys_diff or args.keys_list:
-        set_log_level(logging.WARNING)
+        set_logging(None)
     else:
-        set_log_level(logging.DEBUG if args.debug else logging.INFO)
+        set_logging(logging.DEBUG if args.debug else logging.INFO)
 
     if args.keys_diff:
         print_keys_diff()

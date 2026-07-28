@@ -61,7 +61,7 @@ class Config:
 
         for plugin in self.plugins:
             if plugin.config_structure():
-                data[plugin.name.lower()] = plugin.default_config()
+                data["plugins"][plugin.name.lower()] = plugin.default_config()
 
         return data
 

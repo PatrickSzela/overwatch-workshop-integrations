@@ -33,7 +33,7 @@ A proof-of-concept application enabling control of Custom Games from external so
 > [!IMPORTANT]
 > Except for _Modify FOV_, **which doesn't have any key assigned**, the keybinds above should match the default in-game keybinds
 >
-> If you set your own keybinds in game and would prefer to keep them, you can modify the keybinds this application uses in the `config.json` file
+> If you set your own keybinds in game and would prefer to keep them, you can modify the keybinds this application uses in the `config.json` file - see [List all supported keys](#list-all-supported-keys) usage example
 
 ## Installation
 

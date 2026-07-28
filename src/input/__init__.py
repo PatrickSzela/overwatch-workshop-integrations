@@ -1,3 +1,4 @@
+import json
 from typing import cast
 
 from ..logging import create_logger
@@ -28,8 +29,8 @@ def print_keys_diff():
     for idx, method in enumerate(INPUT_METHODS):
         keys = keys_per_input_method[idx]
         print(f"{method.name}:")
-        print("  Extra keys:", list(keys - same_keys))
-        print("  Missing keys:", list(all_keys - keys))
+        print("  Extra keys:", json.dumps(list(keys - same_keys)))
+        print("  Missing keys:", json.dumps(list(all_keys - keys)))
         print()
 
 

@@ -3,6 +3,7 @@ import asyncio
 import logging
 import sys
 import threading
+import json
 from argparse import ArgumentParser
 from typing import Any, cast
 
@@ -29,14 +30,20 @@ async def _logic():
     )
 
     parser.add_argument(
-        "--keys-list",
+        "--print-keys",
         help="List all keys supported by current input method",
         action="store_true",
     )
 
     parser.add_argument(
-        "--keys-diff",
+        "--print-keys-diff",
         help="List differences between keys of all input methods",
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--print-default-config",
+        help="Print out default config",
         action="store_true",
     )
 
@@ -46,34 +53,36 @@ async def _logic():
         plugin.add_arguments(parser)
 
     args = parser.parse_args()
+    args_dict = vars(args)
 
-    if args.keys_diff or args.keys_list:
+    if any(k.startswith("print_") and v is True for k, v in args_dict.items()):
         set_logging(None)
     else:
         set_logging(logging.DEBUG if args.debug else logging.INFO)
 
-    if args.keys_diff:
+    if args.print_keys_diff:
         print_keys_diff()
         sys.exit()
 
     args = parser.parse_args()
     input_method = await get_input_method()
 
-    if args.keys_list:
-        print(
-            f"All supported keys by '{input_method.name}':",
-            list(input_method.list_keys()),
-        )
+    if args.print_keys:
+        print(f"All supported keys by '{input_method.name}':")
+        print(json.dumps(list(input_method.list_keys())))
         sys.exit()
 
     await input_method.initialize()
 
     config = Config(plugin_classes)
+
+    if args.print_default_config:
+        print(json.dumps(config.default_config(), indent=4))
+        sys.exit()
+
     config.load()
 
     input_method.set_keys(config.config["main"]["keybinds"])
-
-    args_dict = vars(args)
 
     plugins: list[IPlugin] = []
     plugin_names = {

@@ -1,3 +1,5 @@
+from typing import cast
+
 from ..logging import create_logger
 from .input import IInput
 from .keyboard_mouse import KeyboardMouse
@@ -14,15 +16,21 @@ INPUT_METHODS: list[type[IInput]] = [
     KeyboardMouse,
 ]
 
-# xdo = set(Xdotool.key_map.keys())
-# ydo = set(Ydotool.key_map.keys())
-# kbm = set(KeyboardMouse.key_map.keys())
-# all_keys = xdo | ydo | kbm
 
-# print("Not in xdotool: ", all_keys - xdo)
-# print("Not in ydotool: ", all_keys - ydo)
-# print("Not in keyboard_mouse: ", all_keys - kbm)
-# exit()
+def print_keys_diff():
+    keys_per_input_method = [
+        set(method.key_map.keys()) for method in INPUT_METHODS
+    ]
+
+    all_keys = cast(set[str], set.union(*keys_per_input_method))
+    same_keys = cast(set[str], set.intersection(*keys_per_input_method))
+
+    for idx, method in enumerate(INPUT_METHODS):
+        keys = keys_per_input_method[idx]
+        print(f"{method.name}:")
+        print("  Extra keys:", list(keys - same_keys))
+        print("  Missing keys:", list(all_keys - keys))
+        print()
 
 
 async def get_input_method():

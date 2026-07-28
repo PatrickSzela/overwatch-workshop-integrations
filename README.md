@@ -130,18 +130,18 @@ python ./main.py --ttv karq emongg ml7support
 python ./main.py --ttv karq emongg ml7support --yt karq emongg ml7support
 ```
 
+#### List all supported keys:
+
+Some input methods might support additional keys that others do not, but key names between them are kept uniform.
+
+```sh
+python ./main.py --keys-list
+```
+
 #### See all available options:
 
 ```sh
 python ./main.py --help
-```
-
-#### List all supported keys:
-
-Some input methods might support additional keys that others do not, but key names are kept uniform.
-
-```sh
-python ./main.py --list-keys
 ```
 
 ### Nested Wayland compositor

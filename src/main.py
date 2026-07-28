@@ -8,7 +8,7 @@ from typing import Any, cast
 
 from .config import Config
 from .game import Game
-from .input import get_input_method
+from .input import get_input_method, print_keys_diff
 from .logging import create_logger, set_log_level
 from .plugin import IPlugin, load_plugins
 
@@ -29,8 +29,14 @@ async def _logic():
     )
 
     parser.add_argument(
-        "--list-keys",
+        "--keys-list",
         help="List all keys supported by current input method",
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--keys-diff",
+        help="List differences between keys of all input methods",
         action="store_true",
     )
 
@@ -40,11 +46,24 @@ async def _logic():
         plugin.add_arguments(parser)
 
     args = parser.parse_args()
-    set_log_level(logging.DEBUG if args.debug else logging.INFO)
+
+    if args.keys_diff or args.keys_list:
+        set_log_level(logging.WARNING)
+    else:
+        set_log_level(logging.DEBUG if args.debug else logging.INFO)
+
+    if args.keys_diff:
+        print_keys_diff()
+        sys.exit()
+
+    args = parser.parse_args()
     input_method = await get_input_method()
 
-    if args.list_keys:
-        logger.info("All supported keys: %s", list(input_method.list_keys()))
+    if args.keys_list:
+        print(
+            f"All supported keys by '{input_method.name}':",
+            list(input_method.list_keys()),
+        )
         sys.exit()
 
     await input_method.initialize()

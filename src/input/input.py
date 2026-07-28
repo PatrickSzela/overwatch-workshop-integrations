@@ -1,19 +1,46 @@
 import asyncio
 from abc import ABC, abstractmethod
 from logging import Logger
-from typing import Any, Awaitable, ClassVar
+from typing import TYPE_CHECKING, Any, Awaitable, ClassVar, cast
+
+if TYPE_CHECKING:
+    from ..config import KeybindsConfig
 
 
 class IInput(ABC):
     name: ClassVar[str]
     logger: Logger
     keys: list[Any]
+    key_map: dict[str, Any]
+    key_order: list[str] = [
+        "spectate_lock_on",
+        "modify_fov",
+        "disable_camera_blending",
+        "move_fast",
+        "move_slow",
+        "move_down",
+        "move_up",
+    ]
 
     async def initialize(self):
         pass
 
     async def cleanup(self):
         pass
+
+    def set_keys(self, keybinds: "KeybindsConfig") -> None:
+        self.keys = []
+
+        for key in self.key_order:
+            keybind = cast(str, keybinds[key])
+
+            if keybind not in self.key_map:
+                raise KeyError(f"Unknown key '{keybind}'")
+
+            self.keys.append(self.key_map[keybind])
+
+    def list_keys(self):
+        return self.key_map.keys()
 
     @staticmethod
     @abstractmethod

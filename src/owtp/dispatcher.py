@@ -21,8 +21,8 @@ if TYPE_CHECKING:
 logger = create_logger("OWTP.MsgSender")
 
 TICK = 0.016
-DELAY_BETWEEN_DOWN_AND_UP_BUTTONS = TICK * 4
-DELAY_BEFORE_NEXT_INPUTS = TICK * 2
+DELAY_BETWEEN_DOWN_AND_UP_BUTTONS = TICK * 3
+DELAY_BEFORE_NEXT_INPUTS = TICK * 3
 
 type Response = tuple[MessageIn, asyncio.Event]
 

@@ -4,21 +4,14 @@ import subprocess
 
 from ..logging import create_logger
 from .input import IInput
+from .key_map.linux import KEY_MAP
 
 
 class Ydotool(IInput):
     name = "ydotool"
     logger = create_logger("Input.Ydotool")
     command = "ydotool"
-    keys = [
-        "29",  # ctrl
-        "42",  # shift
-        "16",  # q
-        "0xC0",  # m1
-        "44",  # z
-        "33",  # f
-        "18",  # e
-    ]
+    key_map = KEY_MAP
 
     @staticmethod
     async def is_supported():
@@ -27,7 +20,7 @@ class Ydotool(IInput):
             and shutil.which(Ydotool.command) is not None
         )
 
-    def __init__(self) -> None:
+    async def initialize(self):
         processes = subprocess.check_output(["ps", "aux"]).decode()
 
         if "ydotoold" not in processes.lower():
@@ -35,16 +28,16 @@ class Ydotool(IInput):
                 "Ydotoold daemon is not running, don't forget to start it!"
             )
 
-    def create_task(self, keys: list[str], is_press: bool):
+    def create_task(self, keys: list[str | int], is_press: bool):
         commands: list[str] = []
         keyboard: list[str] = []
         mouse: list[str] = []
 
         for key in keys:
-            if key.startswith("0x"):
+            if isinstance(key, str) and key.startswith("0x"):
                 mouse.append(key)
             else:
-                keyboard.append(key)
+                keyboard.append(str(key))
 
         if keyboard:
             cmd = f"{self.command} key -d 0 "

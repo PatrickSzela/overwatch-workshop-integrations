@@ -14,8 +14,18 @@ INPUT_METHODS: list[type[IInput]] = [
     KeyboardMouse,
 ]
 
+# xdo = set(Xdotool.key_map.keys())
+# ydo = set(Ydotool.key_map.keys())
+# kbm = set(KeyboardMouse.key_map.keys())
+# all_keys = xdo | ydo | kbm
 
-async def initialize():
+# print("Not in xdotool: ", all_keys - xdo)
+# print("Not in ydotool: ", all_keys - ydo)
+# print("Not in keyboard_mouse: ", all_keys - kbm)
+# exit()
+
+
+async def get_input_method():
     input_class: type[IInput] | None = None
 
     for i in INPUT_METHODS:
@@ -31,5 +41,4 @@ async def initialize():
     logger.info('Using "%s" for sending inputs', input_class.name)
 
     cl = input_class()
-    await cl.initialize()
     return cl

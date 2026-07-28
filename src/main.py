@@ -1,13 +1,14 @@
 import _thread
 import asyncio
+import logging
+import sys
 import threading
 from argparse import ArgumentParser
 from typing import Any, cast
-import logging
 
 from .config import Config
 from .game import Game
-from .input import initialize as initialize_input
+from .input import get_input_method
 from .logging import create_logger, set_log_level
 from .plugin import IPlugin, load_plugins
 
@@ -27,6 +28,12 @@ async def _logic():
         action="store_true",
     )
 
+    parser.add_argument(
+        "--list-keys",
+        help="List all keys supported by current input method",
+        action="store_true",
+    )
+
     plugin_classes = load_plugins()
 
     for plugin in plugin_classes:
@@ -34,10 +41,18 @@ async def _logic():
 
     args = parser.parse_args()
     set_log_level(logging.DEBUG if args.debug else logging.INFO)
-    input_method = await initialize_input()
+    input_method = await get_input_method()
+
+    if args.list_keys:
+        logger.info("All supported keys: %s", list(input_method.list_keys()))
+        sys.exit()
+
+    await input_method.initialize()
 
     config = Config(plugin_classes)
     config.load()
+
+    input_method.set_keys(config.config["main"]["keybinds"])
 
     args_dict = vars(args)
 

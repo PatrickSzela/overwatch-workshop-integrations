@@ -33,7 +33,7 @@ A proof-of-concept application enabling control of Custom Games from external so
 > [!IMPORTANT]
 > Except for _Modify FOV_, **which doesn't have any key assigned**, the keybinds above should match the default in-game keybinds
 >
-> These keys are currently hardcoded in the tool and there's no way to change them, so for now you're going to have to match them in-game. In the future that should change
+> If you set your own keybinds in game and would prefer to keep them, you can modify the keybinds this application uses in the `config.json` file
 
 ## Installation
 
@@ -72,12 +72,13 @@ Additionally:
       - **Linux users:** will need to provide a path to the `Documents/Overwatch` folder in their Proton/Wine prefix:
         - For Proton (Steam): `{STEAM_LIBRARY_FOLDER}/compatdata/2357570/pfx/drive_c/users/steamuser/Documents/Overwatch`
         - For Wine: the location depends on how you've set up your game, so you're on your own here
-   2. **For Twitch integration**:
+   2. `main.keybinds`: if you use custom keybinds in-game, set them up here. See [List all supported keys](#list-all-supported-keys-the-autodetected-input-method-supports) for list of possible values
+   3. **For Twitch integration**:
       1. Insert the following information generated in the [Installation](#installation) step:
          - `twitch.app_id`: insert **Client ID**
          - `twitch.app_secret`: insert **Client secret**
       2. The next time you run the application, follow the instructions shown in the terminal and authenticate with the Twitch account you'd like to use as a bot
-   3. **For YouTube integration**:
+   4. **For YouTube integration**:
       1. Replace the contents of `youtube.secrets` with the contents of the file generated in the [Installation](#installation) step
       2. The next time you run the application, follow the instructions shown in the terminal and authenticate with the YouTube account you'd like to use as a bot
 
@@ -133,6 +134,14 @@ python ./main.py --ttv karq emongg ml7support --yt karq emongg ml7support
 
 ```sh
 python ./main.py --help
+```
+
+#### List all supported keys:
+
+Some input methods might support additional keys that others do not, but key names are kept uniform.
+
+```sh
+python ./main.py --list-keys
 ```
 
 ### Nested Wayland compositor

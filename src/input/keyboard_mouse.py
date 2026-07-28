@@ -1,5 +1,4 @@
 import asyncio
-import os
 import platform
 
 import keyboard as kbd
@@ -7,27 +6,17 @@ import mouse as ms  # type: ignore
 
 from ..logging import create_logger
 from .input import IInput
+from .key_map.keyboard_mouse import KEY_MAP
 
 
 class KeyboardMouse(IInput):
     name = "keyboard_mouse"
     logger = create_logger("Input.KbdMouse")
-    keys = [
-        "left ctrl",
-        "left shift",
-        "q",
-        "mouse left",
-        "z",
-        "f",
-        "e",
-    ]
+    key_map = KEY_MAP
 
     @staticmethod
     async def is_supported():
-        return platform.system() == "Windows" or (
-            # on Linux running as root is required
-            platform.system() == "Linux" and os.getuid() == 0
-        )
+        return platform.system() == "Windows"
 
     def _press_buttons(
         self, keyboard: list[str], mouse: list[str], is_press: bool

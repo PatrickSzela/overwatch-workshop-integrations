@@ -33,7 +33,8 @@ FILE_FORMATTER = (
 FILE_HANDLER = logging.FileHandler(
     os.path.join(
         LOGS_DIR, f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
-    )
+    ),
+    delay=True,
 )
 
 logging.basicConfig(

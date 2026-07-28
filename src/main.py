@@ -1,9 +1,9 @@
 import _thread
 import asyncio
+import json
 import logging
 import sys
 import threading
-import json
 from argparse import ArgumentParser
 from typing import Any, cast
 
@@ -82,7 +82,7 @@ async def _logic():
 
     config.load()
 
-    input_method.set_keys(config.config["main"]["keybinds"])
+    input_method.set_keys(config.config["keybinds"])
 
     plugins: list[IPlugin] = []
     plugin_names = {
@@ -106,9 +106,12 @@ async def _logic():
     logger.info("Loaded plugins: %s", [plugin.name for plugin in plugins])
     await asyncio.gather(*(plugin.initialize(plugins) for plugin in plugins))
 
+    c = config.config.copy()
+    c.pop("plugins")
+
     game = Game(
-        **config.config["main"],
-        plugins=plugins,
+        **c,
+        plugins=plugins,  # pyright: ignore[reportCallIssue]
         input_method=input_method,
     )
 

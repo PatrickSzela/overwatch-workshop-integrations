@@ -67,19 +67,19 @@ Additionally:
 1. Activate the Python virtual environment if it's not active already
 2. Execute the `main.py` script
 3. A new configuration file `config.json` will be generated at the root directory of this project. Open it and fill it out:
-   1. `main.overwatch_dir`: path to the Overwatch directory in your Documents folder
+   1. `overwatch_dir`: path to the Overwatch directory in your Documents folder
       - **Windows users:** for majority of users, you won't have to provide this information, unless you've changed the location of your Documents or Overwatch folders
       - **Linux users:** will need to provide a path to the `Documents/Overwatch` folder in their Proton/Wine prefix:
         - For Proton (Steam): `{STEAM_LIBRARY_FOLDER}/compatdata/2357570/pfx/drive_c/users/steamuser/Documents/Overwatch`
         - For Wine: the location depends on how you've set up your game, so you're on your own here
-   2. `main.keybinds`: if you use custom keybinds in-game, set them up here. See [List all supported keys](#list-all-supported-keys-the-autodetected-input-method-supports) for list of possible values
+   2. `keybinds`: if you use custom keybinds in-game, set them up here. See [List all supported keys](#list-all-supported-keys-the-autodetected-input-method-supports) for list of possible values
    3. **For Twitch integration**:
       1. Insert the following information generated in the [Installation](#installation) step:
-         - `twitch.app_id`: insert **Client ID**
-         - `twitch.app_secret`: insert **Client secret**
+         - `plugins.twitch.app_id`: insert **Client ID**
+         - `plugins.twitch.app_secret`: insert **Client secret**
       2. The next time you run the application, follow the instructions shown in the terminal and authenticate with the Twitch account you'd like to use as a bot
    4. **For YouTube integration**:
-      1. Replace the contents of `youtube.secrets` with the contents of the file generated in the [Installation](#installation) step
+      1. Replace the contents of `plugins.youtube.secrets` with the contents of the file generated in the [Installation](#installation) step
       2. The next time you run the application, follow the instructions shown in the terminal and authenticate with the YouTube account you'd like to use as a bot
 
 ## Usage
@@ -135,7 +135,7 @@ python ./main.py --ttv karq emongg ml7support --yt karq emongg ml7support
 Some input methods might support additional keys that others do not, but key names between them are kept uniform.
 
 ```sh
-python ./main.py --keys-list
+python ./main.py --print-keys
 ```
 
 #### See all available options:

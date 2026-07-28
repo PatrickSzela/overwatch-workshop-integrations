@@ -1,11 +1,11 @@
 import json
 import os
 import sys
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from .logging import create_logger
 from .plugin import IPlugin
-from .utils import PROJECT_ROOT, validate_typeddict
+from .utils import PROJECT_ROOT, validate_dict
 
 CONFIG_PATH = os.path.join(PROJECT_ROOT, "config.json")
 
@@ -22,15 +22,12 @@ class KeybindsConfig(TypedDict):
     move_up: str
 
 
-class MainConfig(TypedDict):
+class ConfigData(TypedDict):
     overwatch_dir: str
     keybinds: KeybindsConfig
     buttons_down_ticks: int
     buttons_up_ticks: int
-
-
-class ConfigData(TypedDict):
-    main: MainConfig
+    plugins: dict[str, Any]
 
 
 DEFAULT_KEYBINDS = KeybindsConfig(
@@ -43,13 +40,14 @@ DEFAULT_KEYBINDS = KeybindsConfig(
     move_up="e",
 )
 
-DEFAULT_MAIN_CONFIG = MainConfig(
+DEFAULT_CONFIG = ConfigData(
     overwatch_dir=os.path.expanduser(
         os.sep.join(["~", "My Documents", "Overwatch"])
     ),
     keybinds=DEFAULT_KEYBINDS,
     buttons_down_ticks=3,
     buttons_up_ticks=3,
+    plugins={},
 )
 
 
@@ -59,7 +57,7 @@ class Config:
         self.config: ConfigData
 
     def default_config(self):
-        data: ConfigData = ConfigData(main=DEFAULT_MAIN_CONFIG)
+        data = ConfigData(DEFAULT_CONFIG)
 
         for plugin in self.plugins:
             if plugin.config_structure():
@@ -82,16 +80,24 @@ class Config:
         with open(CONFIG_PATH, "r", encoding="utf-8") as file:
             try:
                 data = json.load(file)
-                validate_typeddict(data, ConfigData)
+                validate_dict(data, ConfigData)
 
-                config = ConfigData(main=MainConfig(**data["main"]))
+                config = ConfigData(data)
 
                 for plugin in self.plugins:
                     cls = plugin.config_structure()
                     name = plugin.name.lower()
 
-                    if cls:
-                        config[name] = cls(**data[name])
+                    if not cls:
+                        continue
+
+                    if name not in config["plugins"]:
+                        raise KeyError(
+                            f"No config for plugin '{plugin.name}' found in 'config.json'"
+                        )
+
+                    validate_dict(data["plugins"][name], cls, f"plugins.{name}")
+                    config[name] = cls(**data["plugins"][name])
 
                 logger.info("Config loaded")
                 self.config = config

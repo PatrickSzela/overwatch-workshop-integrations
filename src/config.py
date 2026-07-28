@@ -5,7 +5,7 @@ from typing import TypedDict
 
 from .logging import create_logger
 from .plugin import IPlugin
-from .utils import PROJECT_ROOT
+from .utils import PROJECT_ROOT, validate_typeddict
 
 CONFIG_PATH = os.path.join(PROJECT_ROOT, "config.json")
 
@@ -82,6 +82,8 @@ class Config:
         with open(CONFIG_PATH, "r", encoding="utf-8") as file:
             try:
                 data = json.load(file)
+                validate_typeddict(data, ConfigData)
+
                 config = ConfigData(main=MainConfig(**data["main"]))
 
                 for plugin in self.plugins:
@@ -93,9 +95,10 @@ class Config:
 
                 logger.info("Config loaded")
                 self.config = config
-            except BaseException:
+            except BaseException as e:
                 logger.warning(
-                    "Failed to load config file! Please move the existing config file to a safe place and run the application again to generate a new empty config file, and then fill it out."
+                    "Failed to load config file - reason: %s! Please move the existing config file to a safe place and run the application again to generate a new empty config file, and then fill it out",
+                    repr(e),
                 )
                 sys.exit(1)
 

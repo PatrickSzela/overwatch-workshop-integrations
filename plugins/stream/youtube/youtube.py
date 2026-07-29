@@ -41,7 +41,7 @@ class YouTube(IStream):
     def add_arguments(parser: ArgumentParser):
         IStream.add_arguments(parser)
 
-        group = parser.add_argument_group("YouTube Live Stream integration")
+        group = parser.add_argument_group("Chat integration - YouTube Live Stream")
 
         group.add_argument(
             "--yt",

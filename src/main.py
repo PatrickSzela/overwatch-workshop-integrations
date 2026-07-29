@@ -52,6 +52,9 @@ async def _logic():
     for plugin in plugin_classes:
         plugin.add_arguments(parser)
 
+    parser._action_groups.sort(  # pylint: disable=W0212
+        key=lambda x: (not x.title.islower() if x.title else "", x.title)
+    )
     args = parser.parse_args()
     args_dict = vars(args)
 

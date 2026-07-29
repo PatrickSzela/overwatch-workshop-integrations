@@ -50,7 +50,7 @@ class Twitch(IStream):
     def add_arguments(parser: ArgumentParser):
         IStream.add_arguments(parser)
 
-        group = parser.add_argument_group("Twitch integration")
+        group = parser.add_argument_group("Chat integration - Twitch")
 
         group.add_argument(
             "--ttv",

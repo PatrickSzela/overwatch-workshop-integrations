@@ -47,17 +47,17 @@ class IStream(IPlugin, ABC):
 
         self._loop = asyncio.get_event_loop()
         self.events = StreamEvents()
-        self.silent = args.stream_silent
+        self.silent = args.chat_silent
 
     @staticmethod
     def add_arguments(parser: ArgumentParser):
-        title = "Stream integrations"
+        title = "Chat integration"
 
         if not any(group.title == title for group in parser._action_groups):  # pylint: disable=W0212
             group = parser.add_argument_group(title)
 
             group.add_argument(
-                "--stream-silent",
+                "--chat-silent",
                 help="do not send any messages in chats the bot is connected to",
                 action="store_true",
             )

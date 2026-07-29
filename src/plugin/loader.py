@@ -33,4 +33,4 @@ def load_plugins():
         except BaseException as e:
             logger.warning("Failed to load plugin %s: %s", name, repr(e))
 
-    return sorted(list(plugins), key=lambda a: a.name)
+    return list(plugins)

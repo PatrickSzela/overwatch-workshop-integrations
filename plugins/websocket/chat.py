@@ -28,12 +28,12 @@ class WebSocketChat(IStream):
     def add_arguments(parser: ArgumentParser):
         IStream.add_arguments(parser)
 
-        group = parser.add_argument_group("WebSocket Chat")
+        group = parser.add_argument_group("Chat integration - WebSocket server")
 
         group.add_argument(
             "--wsc",
             "--websocket-chat",
-            help="whether to connect bot to running WebSocket server",
+            help="whether to connect bot to the running WebSocket server",
             action="store_true",
             dest="websocketchat",
         )

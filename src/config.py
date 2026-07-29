@@ -31,12 +31,12 @@ class ConfigData(TypedDict):
 
 
 DEFAULT_KEYBINDS = KeybindsConfig(
-    spectate_lock_on="left_ctrl",
-    modify_fov="left_shift",
-    disable_camera_blending="q",
-    move_fast="mouse_left",
-    move_slow="z",
-    move_down="f",
+    spectate_lock_on="mouse_left",
+    modify_fov="f",
+    disable_camera_blending="z",
+    move_fast="left_shift",
+    move_slow="left_ctrl",
+    move_down="q",
     move_up="e",
 )
 

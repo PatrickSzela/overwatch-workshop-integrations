@@ -10,15 +10,15 @@ if TYPE_CHECKING:
 class IInput(ABC):
     name: ClassVar[str]
     logger: Logger
-    keys: list[Any]
+    keys: list[list[Any]]
     key_map: dict[str, Any]
     key_order: list[str] = [
-        "spectate_lock_on",
-        "modify_fov",
-        "disable_camera_blending",
-        "move_fast",
         "move_slow",
+        "move_fast",
         "move_down",
+        "spectate_lock_on",
+        "disable_camera_blending",
+        "modify_fov",
         "move_up",
     ]
 

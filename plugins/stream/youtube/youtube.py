@@ -58,7 +58,7 @@ class YouTube(IStream):
             "--yt-vid",
             "--youtube-video",
             "--youtube-video-id",
-            help="live stream video ID to which the bot should join to; you can retrieve the video ID of a live stream from it's URL",
+            help="video ID of live stream to which the bot should join to; you can retrieve the ID from live stream's URL",
             type=str,
             action="extend",
             nargs="+",

@@ -36,7 +36,7 @@ class Twitch(IStream):
         super().__init__(args, config)
 
         self._config = config
-        self._channels: list[str] = list(set(args.twitch_channels))
+        self._channels: list[str] = list(set(args.twitch_channel))
 
         self._twitch: TwitchApi | None = None
         self._chat: Chat | None = None
@@ -55,12 +55,12 @@ class Twitch(IStream):
         group.add_argument(
             "--ttv",
             "--twitch",
-            "--twitch-channels",
-            help="channels to which the bot should join to",
+            "--twitch-channel",
+            help="channel to which the bot should join to",
             type=str,
             action="extend",
             nargs="+",
-            dest="twitch_channels",
+            dest="twitch_channel",
             metavar="CHANNEL",
         )
 

@@ -48,7 +48,7 @@ class WebSocketChat(IStream):
 
     async def connect(self):
         if not self._websocket_plugin:
-            logger.warning("WebSocket plugin has not been loaded")
+            logger.warning("The WebSocket server plugin has not been loaded")
             return
 
         await self._websocket_plugin.wait_is_running()

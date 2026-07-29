@@ -17,6 +17,9 @@ from src import (
     create_logger,
 )
 
+DEFAULT_HOST = "localhost"
+DEFAULT_PORT = 8080
+
 logger = create_logger("WebSocket")
 
 
@@ -43,8 +46,8 @@ class WebSocket(IPlugin):
         self._loop = asyncio.get_running_loop()
         self._server_task: asyncio.Task[Any] | None = None
         self._server: Server | None = None
-        self._host: str = args.websocket_host or "localhost"
-        self._port: int = args.websocket_port or 8080
+        self._host: str = args.websocket_host or DEFAULT_HOST
+        self._port: int = args.websocket_port or DEFAULT_PORT
         self._ssl_context: ssl.SSLContext | None = None
         self.events = WebSocketEvents()
         self._started_event = asyncio.Event()
@@ -69,7 +72,7 @@ class WebSocket(IPlugin):
         group.add_argument(
             "--ws",
             "--websocket",
-            help="whether to enable WebSocket server; can be skipped if other Websocket arguments are passed",
+            help="whether to enable the WebSocket server; can be skipped if other WebSocket server arguments are passed",
             action="store_true",
             dest="websocket_enabled",
         )
@@ -77,7 +80,7 @@ class WebSocket(IPlugin):
         group.add_argument(
             "--ws-host",
             "--websocket-host",
-            help="host name under which the WebSocket server should be available",
+            help=f"host name under which the WebSocket server should be available (default: {DEFAULT_HOST})",
             type=str,
             metavar="HOST",
             dest="websocket_host",
@@ -86,7 +89,7 @@ class WebSocket(IPlugin):
         group.add_argument(
             "--ws-port",
             "--websocket-port",
-            help="port under which the WebSocket server should be available",
+            help=f"port under which the WebSocket server should be available (default: {DEFAULT_PORT})",
             type=int,
             metavar="PORT",
             dest="websocket_port",
@@ -95,7 +98,7 @@ class WebSocket(IPlugin):
         group.add_argument(
             "--ws-key",
             "--websocket-key-file",
-            help="path to a SSL private key file to use for a WebSocket server",
+            help="path to a SSL private key file to use for the WebSocket server",
             type=Path,
             metavar="PATH",
             dest="websocket_key",
@@ -104,7 +107,7 @@ class WebSocket(IPlugin):
         group.add_argument(
             "--ws-cert",
             "--websocket-cert-file",
-            help="path to a SSL certificate file to use for a WebSocket server",
+            help="path to a SSL certificate file to use for the WebSocket server",
             type=Path,
             metavar="PATH",
             dest="websocket_cert",

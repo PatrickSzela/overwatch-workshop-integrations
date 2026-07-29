@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from logging import Logger
 from typing import TYPE_CHECKING, Any, Awaitable, ClassVar, cast
 
+from ..utils import flatten
+
 if TYPE_CHECKING:
     from ..config import KeybindsConfig
 
@@ -32,12 +34,13 @@ class IInput(ABC):
         self.keys = []
 
         for key in self.key_order:
-            keybind = cast(str, keybinds[key])
+            keys = cast(str, keybinds[key]).split("+")
 
-            if keybind not in self.key_map:
-                raise KeyError(f"Unknown key '{keybind}'")
+            for key in keys:
+                if key not in self.key_map:
+                    raise KeyError(f"Unknown key '{key}'")
 
-            self.keys.append(self.key_map[keybind])
+            self.keys.append([self.key_map[key] for key in keys])
 
     def list_keys(self):
         return self.key_map.keys()
@@ -71,9 +74,9 @@ class IInput(ABC):
 
     async def send_input(self, key: int, held_time: float) -> None:
         binary = bin(key)[2:][::-1]  # remove `0b` from beginning and reverse it
-        keys = [
-            self.keys[idx] for idx, char in enumerate(binary) if char == "1"
-        ]
+        keys = flatten(
+            [self.keys[idx] for idx, char in enumerate(binary) if char == "1"]
+        )
 
         press = self.create_task(keys, True)
         release = self.create_task(keys, False)

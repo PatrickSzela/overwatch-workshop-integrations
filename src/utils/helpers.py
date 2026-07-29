@@ -1,3 +1,4 @@
+import itertools
 import os
 from typing import Any, TypedDict
 
@@ -12,3 +13,7 @@ class EmptyData(TypedDict):
 
 def empty_fn(*_: Any):
     return None
+
+
+def flatten[T](arr: list[list[T]]) -> list[T]:
+    return list(itertools.chain.from_iterable(arr))

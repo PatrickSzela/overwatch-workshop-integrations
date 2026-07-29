@@ -15,7 +15,7 @@ PLUGINS_PATH = "plugins"
 
 def load_plugins():
     "Loads all plugins that are a subclass of :class:`IPlugin` from `directory`."
-    plugins: list[type[IPlugin]] = []
+    plugins: set[type[IPlugin]] = set()
     path = Path(PROJECT_ROOT, PLUGINS_PATH)
 
     for item in path.iterdir():
@@ -29,8 +29,8 @@ def load_plugins():
 
             for _, obj in inspect.getmembers(module, inspect.isclass):
                 if issubclass(obj, IPlugin) and not inspect.isabstract(obj):
-                    plugins.append(obj)
+                    plugins.add(obj)
         except BaseException as e:
             logger.warning("Failed to load plugin %s: %s", name, repr(e))
 
-    return plugins
+    return sorted(list(plugins), key=lambda a: a.name)

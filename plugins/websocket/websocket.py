@@ -3,13 +3,14 @@ import json
 import ssl
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 from websockets import Server, ServerConnection
 from websockets.asyncio.server import broadcast, serve
 
 from src import (
     EmptyData,
+    EventListener,
     IPlugin,
     MessageIn,
     MessageOut,
@@ -17,6 +18,16 @@ from src import (
 )
 
 logger = create_logger("WebSocket")
+
+
+class WebSocketMessage(TypedDict):
+    content: str | dict[str, Any]
+    client: str
+
+
+class WebSocketEvents:
+    def __init__(self) -> None:
+        self.message = EventListener[WebSocketMessage]()
 
 
 class WebSocket(IPlugin):
@@ -35,6 +46,8 @@ class WebSocket(IPlugin):
         self._host: str = args.websocket_host or "localhost"
         self._port: int = args.websocket_port or 8080
         self._ssl_context: ssl.SSLContext | None = None
+        self.events = WebSocketEvents()
+        self._started_event = asyncio.Event()
 
         if args.websocket_key and args.websocket_cert:
             self._ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -51,7 +64,7 @@ class WebSocket(IPlugin):
 
     @staticmethod
     def add_arguments(parser: ArgumentParser):
-        group = parser.add_argument_group("WebSocket integration")
+        group = parser.add_argument_group("WebSocket server")
 
         group.add_argument(
             "--ws",
@@ -99,6 +112,16 @@ class WebSocket(IPlugin):
 
     async def initialize(self, plugins: list[IPlugin]):
         self._server_task = asyncio.create_task(self._run_server())
+        await self.wait_is_running()
+
+    def is_running(self):
+        if not self._server:
+            return False
+
+        return self._server and self._server.is_serving()
+
+    async def wait_is_running(self):
+        await self._started_event.wait()
 
     async def _handle_messages(self, websocket: ServerConnection):
         ip, port, *_ = websocket.remote_address
@@ -114,10 +137,14 @@ class WebSocket(IPlugin):
             try:
                 message = json.loads(message)
             except BaseException:
-                logger.warning(
-                    'Received message that\'s not a JSON: "%s"', message
+                logger.debug(
+                    "Message isn't a JSON, will not be sent to a Workshop mode"
                 )
                 continue
+            finally:
+                self.events.message.emit(
+                    WebSocketMessage(content=message, client=f"{ip}:{port}")
+                )
 
             match message:
                 case {"name": str() as name, "data": dict() as data}:  # pyright: ignore[reportUnknownVariableType]
@@ -129,7 +156,9 @@ class WebSocket(IPlugin):
 
                     self.owtp.add_message(MessageOut(name, data))  # pyright: ignore[reportUnknownArgumentType, reportArgumentType]
                 case _:
-                    logger.warning('Invalid message structure: "%s"', message)
+                    logger.debug(
+                        "Invalid message structure, will not be sent to a Workshop mode"
+                    )
 
         logger.debug("Client disconnected: '%s:%s'", ip, port)
 
@@ -149,25 +178,28 @@ class WebSocket(IPlugin):
                     "Running unencrypted - do not expose the server to the Internet"
                 )
 
+            self._started_event.set()
             await self._server.serve_forever()
 
     async def cleanup(self):
         if self._server_task:
             if self._server and self._server.is_serving():
+                self._started_event.clear()
                 self._server.close()
                 logger.debug("Waiting for server to close...")
                 await self._server.wait_closed()
 
             self._server_task.cancel()
 
-    def on_workshop_message(self, message: MessageIn[EmptyData]):
-        payload = json.dumps({"name": message.name, "data": message.data})
-        logger.debug('Broadcasting payload: "%s"', payload)
+    def send_message(self, message: str):
+        logger.debug("Sending message: '%s'", message)
 
         if not self._server or not self._server.is_serving():
-            logger.warning(
-                "Received message from Workshop but server is not running"
-            )
+            logger.warning("Can't send a message when server is not running")
             return
 
-        broadcast(self._server.connections, payload)
+        broadcast(self._server.connections, message)
+
+    def on_workshop_message(self, message: MessageIn[EmptyData]):
+        payload = json.dumps({"name": message.name, "data": message.data})
+        self.send_message(payload)

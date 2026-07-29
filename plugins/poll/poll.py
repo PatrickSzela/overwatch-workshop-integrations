@@ -149,7 +149,11 @@ class Poll(IPlugin):
     def add_vote(self, choice: str, voter: str, channel: str, service: str):
         def info(text: str):
             logger.info(
-                "%s (in %s's chat on %s) %s", voter, channel, service, text
+                "'%s' (%son %s) %s",
+                voter,
+                f"in {channel}'s chat " if channel else "",
+                service,
+                text,
             )
 
         try:

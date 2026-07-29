@@ -88,7 +88,7 @@ async def _logic():
     plugin_names = {
         key.split("_")[0]
         for key in args_dict.keys()
-        if args_dict[key] not in [[], None]
+        if args_dict[key] not in [[], None, False]
     }
 
     for plugin in plugin_classes:

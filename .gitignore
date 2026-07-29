@@ -179,3 +179,4 @@ config/
 tokens_*.json*
 config.json*
 logs/
+*.pem

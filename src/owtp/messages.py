@@ -47,7 +47,9 @@ class ErrorMessageData(TypedDict):
     packets: list[int]
 
 
-ConnectResponse: DefineMessageOut = define_message_out(MessageName.CONNECT)
+ConnectResponse: DefineMessageOut = define_message_out(
+    MessageName.CONNECT, priority=-99999
+)
 ConnectMessage: DefineMessageIn[ConnectMessageData] = define_message_in(
     MessageName.CONNECT
 )

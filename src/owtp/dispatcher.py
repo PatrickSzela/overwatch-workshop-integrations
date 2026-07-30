@@ -75,7 +75,7 @@ class MessageDispatcher:
             message.name,
             message.data,
         )
-        self._messages_queue.put_nowait(message)
+        self._messages_queue.put_nowait(message, message.priority)
 
     def remove_of_type(self, message_type: DefineMessageOut[Any]):
         copy = self._messages_queue.items()
@@ -91,7 +91,7 @@ class MessageDispatcher:
         if self._currently_sent_message == message:
             self.cancel_current()
 
-        if message in self._messages_queue:
+        if message in self._messages_queue.items():
             self._messages_queue.remove_nowait(message)
 
     def retry(self, error_code: str):

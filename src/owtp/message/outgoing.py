@@ -35,6 +35,7 @@ class MessageOut[T: Mapping[str, Any] = EmptyData]:
         self,
         name: str,
         data: T,
+        priority: int = 0,
         number_of_attempts: int = 5,
         on_start: Callable[[], None] | None = None,
         on_finish: Callable[[], None] | None = None,
@@ -44,6 +45,7 @@ class MessageOut[T: Mapping[str, Any] = EmptyData]:
         self.name = name
         self._data = data
         self._definition: SupportedMessageDefinition | None = None
+        self._priority = priority
         self._number_of_attempts = number_of_attempts
         self._on_start = on_start
         self._on_finish = on_finish
@@ -67,6 +69,10 @@ class MessageOut[T: Mapping[str, Any] = EmptyData]:
     @property
     def state(self):
         return self._state
+
+    @property
+    def priority(self):
+        return self._priority
 
     @state.setter
     def state(self, value: MessageOutState):
@@ -150,6 +156,7 @@ class DefineMessageOut[T: Mapping[str, Any] = EmptyData](Protocol):
 
 def define_message_out[T: Mapping[str, Any] = EmptyData](
     name: str,
+    priority: int = 0,
 ) -> DefineMessageOut[T]:
     def creator(
         data: T | None = None,
@@ -161,6 +168,7 @@ def define_message_out[T: Mapping[str, Any] = EmptyData](
         return MessageOut(
             name,
             data if data is not None else cast(T, {}),
+            priority,
             number_of_attempts,
             on_start,
             on_finish,

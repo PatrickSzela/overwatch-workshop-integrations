@@ -22,6 +22,8 @@ class IInput(ABC):
         "disable_camera_blending",
         "modify_fov",
         "move_up",
+        "pause_game",
+        "restart_custom_game",
     ]
 
     async def initialize(self):

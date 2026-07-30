@@ -74,6 +74,9 @@ class MessageDispatcher:
     def put(self, message: MessageOut):
         self._prepare_message(message)
 
+        if message.is_keybind:
+            self.remove_of_name(message.name)
+
         logger.debug(
             'Adding message "%s" with data %s to the queue',
             message.name,
@@ -150,6 +153,11 @@ class MessageDispatcher:
     async def _process_messages(self):
         while not self._owtp.is_stopped:
             while self._pause_event.is_set():
+                items = self._messages_queue.items()
+
+                if items and items[0].is_keybind:
+                    break
+
                 await asyncio.sleep(0.1)
 
             message = await self._messages_queue.get()
@@ -234,14 +242,16 @@ class MessageDispatcher:
             await asyncio.sleep(self._buttons_up_ticks * TICK)
 
         logger.debug(
-            'Finished sending packets of message "%s", awaiting for confirmation...',
+            'Finished sending packets of message "%s"%s',
             message.name,
+            ("" if message.is_keybind else ", awaiting for confirmation..."),
         )
 
-        await asyncio.wait_for(
-            self._wait_for_response(MessageName.CONFIRM.value),
-            1.5,
-        )
+        if not message.is_keybind:
+            await asyncio.wait_for(
+                self._wait_for_response(MessageName.CONFIRM.value),
+                1.5,
+            )
 
         logger.info(
             'Message "%s" has been successfully sent after %s tries',

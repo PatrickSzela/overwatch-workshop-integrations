@@ -14,6 +14,7 @@ from ..owtp import (
     SupportedMessageDefinition,
     define_message_in,
     is_message_in,
+    messages,
 )
 from ..plugin import IPlugin
 from .player import Player
@@ -66,6 +67,7 @@ class Game:
     ):
         super().__init__()
 
+        self._loop = asyncio.get_running_loop()
         self._state: GameState = GameState.NONE
         self._players: dict[int, dict[int, Player]] = {0: {}, 1: {}, 2: {}}
         self._mode: str | None = None
@@ -73,6 +75,8 @@ class Game:
         self._connection: OWTP | None = None
         self._plugins = plugins
         self._input_method = input_method
+        self._paused = False
+        self._resume_task: asyncio.Task[Any] | None = None
 
         def on_log_create(_: str):
             self._connection = OWTP(
@@ -110,6 +114,10 @@ class Game:
 
         def on_log_close(_: str):
             self._set_state(GameState.CLOSED)
+            self._paused = False
+
+            if self._resume_task:
+                self._resume_task.cancel()
 
             if self._connection:
                 self._connection.cleanup()
@@ -163,6 +171,83 @@ class Game:
     @property
     def connection(self):
         return self._connection
+
+    def toggle_pause(self):
+        if not self.connection:
+            raise RuntimeError("Missing connection")
+
+        def cancel_resume_task():
+            if self._resume_task:
+                logger.debug("Resuming the game: cancelling waiting")
+                self._resume_task.cancel()
+                self._resume_task = None
+
+        def on_pause_start():
+            if not self.connection:
+                raise RuntimeError("Missing connection")
+
+            logger.debug("Pausing the game...")
+            cancel_resume_task()
+            self._paused = True
+            self.connection.pause(True)
+
+        def on_pause_finish():
+            if not self.connection:
+                raise RuntimeError("Missing connection")
+
+            logger.info("Game paused")
+
+        def on_resume_start():
+            if not self.connection:
+                raise RuntimeError("Missing connection")
+
+            logger.debug("Resuming the game...")
+            self._paused = False
+
+        async def resume():
+            if not self.connection:
+                raise RuntimeError("Missing connection")
+
+            logger.info("Resuming the game: waiting 5.5 secs")
+
+            await asyncio.sleep(5.5)
+
+            logger.info("Game resumed")
+
+            self.connection.pause(False)
+            self._resume_task = None
+
+        def on_resume_finish():
+            if not self.connection:
+                raise RuntimeError("Missing connection")
+
+            self._resume_task = self._loop.create_task(resume())
+
+        cancel_resume_task()
+
+        if self._paused:
+            msg = messages.PauseGame(
+                on_start=on_resume_start, on_finish=on_resume_finish
+            )
+        else:
+            msg = messages.PauseGame(
+                on_start=on_pause_start, on_finish=on_pause_finish
+            )
+
+        self.connection.add_message(msg)
+
+    def restart(self):
+        if not self.connection:
+            raise RuntimeError("Missing connection")
+
+        def on_finish():
+            if not self.connection:
+                raise RuntimeError("Missing connection")
+
+            # TODO: move this and game pause logic to connection?
+            self.connection._stop_event.set()  # pyright: ignore[reportPrivateUsage] # pylint: disable=W0212
+
+        self.connection.add_message(messages.RestartGame(on_finish=on_finish))
 
     def _register_player(self, player: Player):
         # TODO: handle when player has left the game

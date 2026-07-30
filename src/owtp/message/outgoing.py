@@ -37,6 +37,7 @@ class MessageOut[T: Mapping[str, Any] = EmptyData]:
         data: T,
         priority: int = 0,
         number_of_attempts: int = 5,
+        is_keybind: bool = False,
         on_start: Callable[[], None] | None = None,
         on_finish: Callable[[], None] | None = None,
         on_error: Callable[[], None] | None = None,
@@ -47,6 +48,7 @@ class MessageOut[T: Mapping[str, Any] = EmptyData]:
         self._definition: SupportedMessageDefinition | None = None
         self._priority = priority
         self._number_of_attempts = number_of_attempts
+        self._is_keybind = is_keybind
         self._on_start = on_start
         self._on_finish = on_finish
         self._on_error = on_error
@@ -69,6 +71,10 @@ class MessageOut[T: Mapping[str, Any] = EmptyData]:
     @property
     def state(self):
         return self._state
+
+    @property
+    def is_keybind(self):
+        return self._is_keybind
 
     @property
     def priority(self):
@@ -97,6 +103,10 @@ class MessageOut[T: Mapping[str, Any] = EmptyData]:
         packets: list[int] = []
 
         self._definition = definition
+
+        if self._is_keybind:
+            self._packets = definition.id
+            return
 
         for name in definition.data_types:
             data_type = definition.data_types[name]
@@ -157,6 +167,7 @@ class DefineMessageOut[T: Mapping[str, Any] = EmptyData](Protocol):
 def define_message_out[T: Mapping[str, Any] = EmptyData](
     name: str,
     priority: int = 0,
+    is_keybind: bool = False,
 ) -> DefineMessageOut[T]:
     def creator(
         data: T | None = None,
@@ -170,6 +181,7 @@ def define_message_out[T: Mapping[str, Any] = EmptyData](
             data if data is not None else cast(T, {}),
             priority,
             number_of_attempts,
+            is_keybind,
             on_start,
             on_finish,
             on_error,

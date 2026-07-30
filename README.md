@@ -18,22 +18,7 @@ A proof-of-concept application enabling control of Custom Games from external so
 - Overwatch account with both _Enable Workshop Inspector_ and _Enable Workshop Inspector Log File_ enabled in Options (under _Gameplay_ → _General_ → _Custom Games - Workshop_)
 - Being a **host (owner)** and **spectator** of the Custom Game lobby
 - Having the Overwatch client continuously focused after starting a Custom Game, not interacting with your PC and not being in any menu
-- Having properly set your keybinds (under _Controls_ → _Spectate_):
-
-| Section         | Name                    | Keybind                             |
-| --------------- | ----------------------- | ----------------------------------- |
-| Spectate        | Spectate Lock On        | Left Mouse Button                   |
-| User Interface  | Modify FOV              | **F** **(not assigned by default)** |
-| Camera Movement | Disable Camera Blending | Z                                   |
-| Camera Movement | Move Fast               | Left Shift                          |
-| Camera Movement | Move Slow               | Left Ctrl                           |
-| Camera Movement | Move Down               | Q                                   |
-| Camera Movement | Move Up                 | E                                   |
-
-> [!IMPORTANT]
-> Except for _Modify FOV_, **which doesn't have any key assigned**, the keybinds above should match the default in-game keybinds
->
-> If you set your own keybinds in game and would prefer to keep them, you can modify the keybinds this application uses in the `config.json` file - see [List all supported keys](#list-all-supported-keys) usage example
+- Having properly set your keybinds - see [Keybinds](#keybinds) section
 
 ## Installation
 
@@ -132,7 +117,9 @@ python ./main.py --ttv karq emongg ml7support --yt karq emongg ml7support
 
 #### List all supported keys:
 
-Some input methods might support additional keys that others do not, but key names between them are kept uniform.
+Use these keycodes for configuring keybinds in `config.json`.
+
+Do note thats ome input methods might support additional keys that others do not, but key names between them are kept uniform.
 
 ```sh
 python ./main.py --print-keys
@@ -158,6 +145,32 @@ Before starting the script and the game:
 3. Execute the `main.py` script with your desired options. If everything went correctly, you should see `[Input] Using "wayland_nested_xdotool" for sending inputs` in the output.
 4. After starting the game, accept remote control request inside of the nested Wayland compositor - do not worry, the remote control is not really remote, no one from outside will have ability to control it or see anything.
 5. Once finished with the application, don't forget to remove the environmental variables, otherwise the game window will not show up or the game will not boot up at all.
+
+## Keybinds
+
+For sending data to a Workshop mode, the following in-game keybinds are utilized (available under _Options_ → _Controls_ → _Spectate_):
+
+> [!IMPORTANT]
+> Except for _Modify FOV_, **which doesn't have any key assigned by default**, the keybinds below should match the default in-game keybinds
+
+| Section         | Name                    | Default keybind              | In-game default |
+| --------------- | ----------------------- | ---------------------------- | --------------- |
+| Spectate        | Spectate Lock On        | <kbd>Left Mouse Button</kbd> | ✅              |
+| User Interface  | Modify FOV              | <kbd>F</kbd>                 | ❌              |
+| Camera Movement | Disable Camera Blending | <kbd>Z</kbd>                 | ✅              |
+| Camera Movement | Move Fast               | <kbd>Left Shift</kbd>        | ✅              |
+| Camera Movement | Move Slow               | <kbd>Left Ctrl</kbd>         | ✅              |
+| Camera Movement | Move Down               | <kbd>Q</kbd>                 | ✅              |
+| Camera Movement | Move Up                 | <kbd>E</kbd>                 | ✅              |
+
+Additionally, for controlling the state of a Custom Game, the following keybinds are used (available under _Options_ → _Controls_ → _Interface_ → _Custom Games_):
+
+| Name                   | Default keybind                                           | In-game default |
+| ---------------------- | --------------------------------------------------------- | --------------- |
+| Moderator - Pause Game | <kbd>Left Ctrl</kbd> + <kbd>Left Alt</kbd> + <kbd>P</kbd> | ✅              |
+| Restart Custom Game    | <kbd>Left Ctrl</kbd> + <kbd>Left Alt</kbd> + <kbd>R</kbd> | ❌              |
+
+If you've changed these in-game keybinds and would prefer to keep them, you can modify the keybinds this application uses in the `config.json` file - see [List all supported keys](#list-all-supported-keys) usage example
 
 ## How does this app works?
 

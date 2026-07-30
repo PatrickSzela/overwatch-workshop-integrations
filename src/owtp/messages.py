@@ -70,6 +70,12 @@ TransmissionReadyMessage: DefineMessageIn = define_message_in(
 TransmissionNotReadyMessage: DefineMessageIn = define_message_in(
     MessageName.TRANSMISSION_NOT_READY
 )
+PauseGame: DefineMessageOut = define_message_out(
+    MessageName.PAUSE_GAME, is_keybind=True, priority=-999
+)
+RestartGame: DefineMessageOut = define_message_out(
+    MessageName.RESTART_GAME, is_keybind=True, priority=-1000
+)
 
 MESSAGES_IN: list[DefineMessageIn[Any]] = [
     ConnectMessage,
@@ -85,6 +91,8 @@ MESSAGES_IN: list[DefineMessageIn[Any]] = [
 MESSAGES_OUT: list[DefineMessageOut[Any]] = [
     ConnectResponse,
     TransmissionFinishedMessage,
+    PauseGame,
+    RestartGame,
 ]
 
 SUPPORTED_MESSAGES = [
@@ -103,5 +111,13 @@ SUPPORTED_MESSAGES = [
             ReservedPackets.CONNECT.value,
             ReservedPackets.CONNECT.value - 1,
         ],
+    ),
+    SupportedMessageDefinition(
+        name=MessageName.PAUSE_GAME,
+        id=[128],
+    ),
+    SupportedMessageDefinition(
+        name=MessageName.RESTART_GAME,
+        id=[256],
     ),
 ]

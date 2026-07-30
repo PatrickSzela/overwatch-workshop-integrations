@@ -20,6 +20,8 @@ class KeybindsConfig(TypedDict):
     move_slow: str
     move_down: str
     move_up: str
+    pause_game: str
+    restart_custom_game: str
 
 
 class ConfigData(TypedDict):
@@ -38,6 +40,8 @@ DEFAULT_KEYBINDS = KeybindsConfig(
     move_slow="left_ctrl",
     move_down="q",
     move_up="e",
+    pause_game="left_ctrl+left_shift+=",
+    restart_custom_game="",
 )
 
 DEFAULT_CONFIG = ConfigData(

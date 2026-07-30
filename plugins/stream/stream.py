@@ -49,6 +49,20 @@ class IStream(IPlugin, ABC):
         self.events = StreamEvents()
         self.silent = args.chat_silent
 
+        def pause():
+            if not self.game:
+                raise RuntimeError("Missing connection")
+
+            self.game.toggle_pause()
+
+        def restart():
+            if not self.game:
+                raise RuntimeError("Missing connection")
+
+            self.game.restart()
+
+        self.commands = {"pause": pause, "restart": restart}
+
     @staticmethod
     def add_arguments(parser: ArgumentParser):
         title = "Chat integration"
@@ -98,6 +112,14 @@ class IStream(IPlugin, ABC):
         self.events.message.emit(
             ChatMessage(message, user, chatroom, self.name)
         )
+
+        if message.startswith("!"):
+            cmd = message.split(" ")[0].lstrip("!")
+
+            if cmd not in self.commands:
+                return
+
+            self.commands[cmd]()
 
     def on_workshop_connect(self) -> None:
         self.send_message_nowait(

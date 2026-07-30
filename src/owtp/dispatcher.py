@@ -63,13 +63,17 @@ class MessageDispatcher:
     def is_sending(self):
         return self._currently_sent_message is not None
 
-    def put(self, message: MessageOut):
+    def _prepare_message(self, message: MessageOut):
         if message.name not in self._owtp.registered_supported_messages:
             raise RuntimeError(
                 f"Cannot send message {message.name} - the Workshop mode hasn't reported that it supports it!"
             )
 
         message.prepare(self._owtp.registered_supported_messages[message.name])
+
+    def put(self, message: MessageOut):
+        self._prepare_message(message)
+
         logger.debug(
             'Adding message "%s" with data %s to the queue',
             message.name,
@@ -87,11 +91,26 @@ class MessageDispatcher:
             if is_message_out(msg, message_type):
                 self.remove(msg)
 
+    def remove_of_name(self, name: str):
+        copy = self._messages_queue.items()
+
+        if self._currently_sent_message:
+            copy.append(self._currently_sent_message)
+
+        for msg in copy:
+            if msg.name == name:
+                self.remove(msg)
+
     def remove(self, message: MessageOut):
         if self._currently_sent_message == message:
             self.cancel_current()
 
         if message in self._messages_queue.items():
+            logger.debug(
+                'Removing message "%s" with data %s from queue',
+                message.name,
+                message.data,
+            )
             self._messages_queue.remove_nowait(message)
 
     def retry(self, error_code: str):
@@ -103,12 +122,24 @@ class MessageDispatcher:
 
     def pause(self, pause: bool):
         if pause:
+            logger.debug(
+                "Pausing transmission, %s messages left in queue",
+                len(self._messages_queue.items()),
+            )
             self._pause_event.set()
         else:
+            logger.debug(
+                "Resuming transmission, %s messages left in queue",
+                len(self._messages_queue.items()),
+            )
             self._pause_event.clear()
 
     def cancel_current(self):
         if self._currently_sent_message:
+            logger.debug(
+                'Cancelling currently sent message "%s"',
+                self._currently_sent_message.name,
+            )
             self._cancel_event.set()
 
     async def _pass_response_and_wait(self, message: MessageIn):
@@ -117,29 +148,12 @@ class MessageDispatcher:
         await event.wait()
 
     async def _process_messages(self):
-        while not self._owtp._stop_event.is_set():  # pyright: ignore[reportPrivateUsage] # pylint: disable=W0212
-            msg = await self._messages_queue.get()
-            self._currently_sent_message = msg
-            self._cancel_event.clear()
-
+        while not self._owtp.is_stopped:
             while self._pause_event.is_set():
                 await asyncio.sleep(0.1)
 
-            logger.debug(
-                'Starting sending message "%s" with data %s, packets: %s',
-                msg.name,
-                msg.data,
-                msg.packets,
-            )
-            msg.state = MessageOutState.SENDING
-            self._owtp.events.send_message_start.emit(msg)
-
-            fail_reason = await self._send_with_retries(msg)
-
-            if fail_reason:
-                logger.warning(fail_reason)
-                msg.state = MessageOutState.ERROR
-                self._owtp.events.send_message_error.emit(msg, fail_reason)
+            message = await self._messages_queue.get()
+            fail_reason = await self._send_message(message)
 
             self._messages_queue.task_done()
 
@@ -148,16 +162,37 @@ class MessageDispatcher:
                 and not fail_reason
                 and self._owtp._connection.interactive  # pyright: ignore[reportPrivateUsage] # pylint: disable=W0212
             ):
-                if msg.name != "TRANSMISSION_FINISHED":
+                if message.name != "TRANSMISSION_FINISHED":
                     self.put(messages.TransmissionFinishedMessage())
                 else:
                     self.pause(True)
 
-            self._currently_sent_message = None
+    async def _send_message(self, message: MessageOut):
+        self._currently_sent_message = message
+        self._cancel_event.clear()
+
+        logger.debug(
+            'Starting sending message "%s" with data %s, packets: %s',
+            message.name,
+            message.data,
+            message.packets,
+        )
+        message.state = MessageOutState.SENDING
+        self._owtp.events.send_message_start.emit(message)
+
+        fail_reason = await self._send_with_retries(message)
+
+        if fail_reason:
+            logger.warning(fail_reason)
+            message.state = MessageOutState.ERROR
+            self._owtp.events.send_message_error.emit(message, fail_reason)
+
+        self._currently_sent_message = None
+        return fail_reason
 
     async def _send_with_retries(self, message: MessageOut):
         for attempt in range(message.number_of_attempts):
-            if self._owtp._stop_event.is_set():  # pyright: ignore[reportPrivateUsage] # pylint: disable=W0212
+            if self._owtp.is_stopped:
                 return f'Cancelling sending message "{message.name}" (try #{attempt + 1}) - received stop event'
 
             if self._cancel_event.is_set():
@@ -222,7 +257,7 @@ class MessageDispatcher:
         name: str,
         data_condition: Callable[[Mapping[str, Any]], bool] = lambda _: True,
     ):
-        while not self._owtp._stop_event.is_set():  # pyright: ignore[reportPrivateUsage] # pylint: disable=W0212
+        while not self._owtp.is_stopped:
             message, event = await self._responses_queue.get()
 
             logger.debug(

@@ -69,8 +69,12 @@ class OWTP:
         self._registered_supported_messages = {}
 
     @property
-    def connected(self):
+    def is_connected(self):
         return self._connection.connected
+
+    @property
+    def is_stopped(self):
+        return self._stop_event.is_set()
 
     @property
     def registered_supported_messages(
@@ -81,6 +85,9 @@ class OWTP:
     @property
     def registered_messages_in(self):
         return self._registered_messages_in
+
+    def pause(self, pause: bool):
+        self._sender.pause(pause)
 
     def add_message(self, message: MessageOut):
         self._sender.put(message)
@@ -128,8 +135,8 @@ class OWTP:
         elif is_message_in(message, messages.ErrorMessage):
             self._sender.retry(message.data["errorCode"])
         elif is_message_in(message, messages.TransmissionReadyMessage):
-            self._sender.pause(False)
+            self.pause(False)
         elif is_message_in(message, messages.TransmissionNotReadyMessage):
-            self._sender.pause(True)
+            self.pause(True)
         else:
             self.events.message.emit(message)

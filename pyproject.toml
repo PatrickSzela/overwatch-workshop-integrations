@@ -2,3 +2,10 @@
 name = "overwatch_workshop_integrations"
 version = "0.1.0"
 description = "A proof-of-concept application that allows to control Custom Game's state from external sources"
+
+[tool.owi.author]
+name = "PatPatPatriq"
+battletag = "Patriq#2214"
+workshop_codes = "PatPatPatriq"
+twitch = "PatPatPatriq"
+youtube = "PatPatPatriq"

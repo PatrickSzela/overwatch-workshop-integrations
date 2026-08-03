@@ -13,6 +13,7 @@ from src import (
     MessageIn,
     ModeInfo,
     define_message_in,
+    get_author,
     is_message_in,
 )
 
@@ -69,11 +70,15 @@ class IStream(IPlugin, ABC):
     async def initialize(self, plugins: list[IPlugin]):
         if not self.is_connected():
             await self.connect()
-            await self.send_message(f"{BOT_NAME}, reporting for duty! o7")
+            await self.send_message(
+                f"{BOT_NAME} by {get_author()}, reporting for duty! o7"
+            )
 
     async def cleanup(self):
         if self.is_connected():
-            await self.send_message(f"{BOT_NAME}, signing off... o7")
+            await self.send_message(
+                f"{BOT_NAME} by {get_author()}, signing off... o7"
+            )
             await self.disconnect()
 
     @abstractmethod

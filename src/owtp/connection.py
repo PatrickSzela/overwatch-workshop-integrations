@@ -7,6 +7,8 @@ from .message import MessageIn
 if TYPE_CHECKING:
     from .owtp import OWTP
 
+OWTP_VERSION = "0.2.0"
+
 logger = create_logger("OWTP.ConnectMgr")
 
 
@@ -26,10 +28,17 @@ class ConnectionManager:
         self.interactive = message.data["interactive"]
         logger.info("Establishing connection with the Workshop mode...")
 
+        if message.data["version"] != OWTP_VERSION:
+            logger.warning(
+                "OWTP version mismatch: Workshop mode supports %s, but application uses %s",
+                message.data["version"],
+                OWTP_VERSION,
+            )
+
         def on_connected():
             self.connected = True
             logger.info("Successfully connected with the Workshop mode")
-            self._owtp.events.connect.emit()
+            self._owtp.events.connect.emit(message.data["mode"])
 
         def on_not_connected():
             self.connected = False

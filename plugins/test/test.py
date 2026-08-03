@@ -8,6 +8,7 @@ from src import (
     IPlugin,
     MessageIn,
     MessageOut,
+    ModeInfo,
     SupportedMessageDefinition,
     create_logger,
     define_message_in,
@@ -27,8 +28,16 @@ class Test(IPlugin):
     def __init__(self, args: Namespace, config: dict[str, Any]):
         super().__init__(args, config)
 
-    def on_workshop_connect(self):
-        logger.info("Connected to a Workshop mode")
+    def on_workshop_connect(self, mode: ModeInfo):
+        logger.info(
+            "Connected to %s v%s by %s (import code: %s) on %s - %s",
+            mode["name"],
+            mode["version"],
+            mode["author"],
+            mode["code"],
+            mode["map"],
+            mode["game_mode"],
+        )
 
     def on_workshop_connect_error(self):
         logger.info("Failed to connect to a Workshop mode")

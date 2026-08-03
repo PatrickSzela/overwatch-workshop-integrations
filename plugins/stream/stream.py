@@ -11,6 +11,7 @@ from src import (
     GameState,
     IPlugin,
     MessageIn,
+    ModeInfo,
     define_message_in,
     is_message_in,
 )
@@ -99,9 +100,9 @@ class IStream(IPlugin, ABC):
             ChatMessage(message, user, chatroom, self.name)
         )
 
-    def on_workshop_connect(self) -> None:
+    def on_workshop_connect(self, mode: ModeInfo) -> None:
         self.send_message_nowait(
-            "Successfully established connection with the Workshop mode!"
+            f"Connected to {mode['name']} v{mode['version']} by {mode['author']} (import code: {mode['code']}) on {mode['map']} - {mode['game_mode']}"
         )
 
     def on_workshop_connect_error(self) -> None:
@@ -116,10 +117,10 @@ class IStream(IPlugin, ABC):
             raise RuntimeError("Missing game instance")
 
         match state:
-            case GameState.STARTED:
-                self.send_message_nowait(
-                    f"New game has started - {self.game.mode} on {self.game.map}"
-                )
+            # case GameState.STARTED:
+            #     self.send_message_nowait(
+            #         f"New game has started - {self.game.mode} on {self.game.map}"
+            #     )
             # case GameState.IN_PROGRESS:
             #     self.send_message_nowait("Game is in progress")
             # case GameState.IN_BETWEEN_ROUNDS:

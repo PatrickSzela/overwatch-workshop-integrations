@@ -28,10 +28,21 @@ class SupportedMessageDefinition:
         )
 
 
+class ModeInfo(TypedDict):
+    name: str
+    code: str
+    version: str
+    author: str
+    game_mode: str
+    map: str
+
+
 class ConnectMessageData(TypedDict):
     "Structure of `data` in incoming message :class:`ConnectResponse`."
 
     interactive: bool
+    version: str
+    mode: ModeInfo
 
 
 class SupportsMessageData(TypedDict):

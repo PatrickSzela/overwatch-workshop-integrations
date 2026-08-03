@@ -4,7 +4,7 @@ from typing import Any
 from ..input import IInput
 from ..logging import create_logger
 from ..utils import EventListener
-from . import SupportedMessageDefinition, messages
+from . import ModeInfo, SupportedMessageDefinition, messages
 from .connection import ConnectionManager
 from .dispatcher import MessageDispatcher
 from .log_processor import WorkshopLogProcessor
@@ -21,7 +21,8 @@ logger = create_logger("OWTP")
 
 class OWTPEvents:
     def __init__(self):
-        self.connect = EventListener[[]]()
+        self.mode_info = EventListener[[ModeInfo]]()
+        self.connect = EventListener[[ModeInfo]]()
         self.disconnect = EventListener[[]]()
         self.connect_error = EventListener[[]]()
         self.log = EventListener[[str]]()
@@ -123,6 +124,7 @@ class OWTP:
 
     async def _dispatch_message(self, message: MessageIn):
         if is_message_in(message, messages.ConnectMessage):
+            self.events.mode_info.emit(message.data["mode"])
             self._connection.connect(message)
         elif is_message_in(message, messages.DisconnectMessage):
             self._connection.disconnect()

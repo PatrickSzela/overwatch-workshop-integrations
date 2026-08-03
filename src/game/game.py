@@ -11,6 +11,7 @@ from ..owtp import (
     DefineMessageIn,
     MessageIn,
     MessageOut,
+    ModeInfo,
     SupportedMessageDefinition,
     define_message_in,
     is_message_in,
@@ -28,17 +29,10 @@ class RegisterPlayerData(TypedDict):
     slot: int
 
 
-class GameStartedData(TypedDict):
-    mode: str
-    map: str
-
-
 RegisterPlayer: DefineMessageIn[RegisterPlayerData] = define_message_in(
     "REGISTER_PLAYER"
 )
-GameStarted: DefineMessageIn[GameStartedData] = define_message_in(
-    GameState.STARTED
-)
+GameStarted = define_message_in(GameState.STARTED)
 GameInProgress = define_message_in(GameState.IN_PROGRESS)
 GameInBetweenRounds = define_message_in(GameState.IN_BETWEEN_ROUNDS)
 GameFinished = define_message_in(GameState.FINISHED)
@@ -68,8 +62,14 @@ class Game:
 
         self._state: GameState = GameState.NONE
         self._players: dict[int, dict[int, Player]] = {0: {}, 1: {}, 2: {}}
-        self._mode: str | None = None
-        self._map: str | None = None
+        self._mode_info: ModeInfo = {
+            "author": "",
+            "code": "",
+            "game_mode": "",
+            "map": "",
+            "name": "",
+            "version": "",
+        }
         self._connection: OWTP | None = None
         self._plugins = plugins
         self._input_method = input_method
@@ -80,6 +80,7 @@ class Game:
             )
             owtp = self._connection
 
+            owtp.events.mode_info.on(self._on_mode_info)
             owtp.events.connect.on(self._on_connect)
             owtp.events.disconnect.on(self._on_disconnect)
             owtp.events.connect_error.on(self._on_connect_error)
@@ -154,11 +155,7 @@ class Game:
 
     @property
     def mode(self):
-        return self._mode
-
-    @property
-    def map(self):
-        return self._map
+        return self._mode_info
 
     @property
     def connection(self):
@@ -175,9 +172,12 @@ class Game:
         self._players[player.team][player.slot] = player
 
     # region Events
-    def _on_connect(self):
+    def _on_mode_info(self, mode: ModeInfo):
+        self._mode_info = mode
+
+    def _on_connect(self, mode: ModeInfo):
         for plugin in self._plugins:
-            plugin.on_workshop_connect()
+            plugin.on_workshop_connect(mode)
 
     def _on_connect_error(self):
         for plugin in self._plugins:
@@ -206,8 +206,6 @@ class Game:
             )
             self._register_player(player)
         elif is_message_in(message, GameStarted):
-            self._mode = message.data["mode"]
-            self._map = message.data["map"]
             self._set_state(GameState.STARTED)
         elif is_message_in(message, GameInProgress):
             self._set_state(GameState.IN_PROGRESS)

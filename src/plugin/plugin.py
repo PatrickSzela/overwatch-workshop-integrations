@@ -11,6 +11,7 @@ if TYPE_CHECKING:
         GameState,
         MessageIn,
         MessageOut,
+        ModeInfo,
         SupportedMessageDefinition,
     )
 
@@ -64,7 +65,7 @@ class IPlugin(ABC):
     async def cleanup(self):
         "Called when plugin's instance is about to be destroyed."
 
-    def on_workshop_connect(self):
+    def on_workshop_connect(self, mode: ModeInfo):
         "Called when successfully connected to the Workshop mode."
 
     def on_workshop_connect_error(self):

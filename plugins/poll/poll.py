@@ -207,7 +207,7 @@ class Poll(IPlugin):
             raise RuntimeError("Missing game instance")
 
         match state:
-            case GameState.CLOSED:
+            case GameState.ENDED:
                 if self._in_progress:
                     self.cancel_poll("Lobby has been closed")
             case _:

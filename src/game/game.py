@@ -18,7 +18,7 @@ from ..owtp import (
 )
 from ..plugin import IPlugin
 from .player import Player
-from .state import GameState
+from .state import GameState, GameStateMessage
 
 logger = create_logger("Game")
 
@@ -29,20 +29,20 @@ class RegisterPlayerData(TypedDict):
     slot: int
 
 
+class GameStateChangeData(TypedDict):
+    state: int
+
+
 RegisterPlayer: DefineMessageIn[RegisterPlayerData] = define_message_in(
     "REGISTER_PLAYER"
 )
-GameStarted = define_message_in(GameState.STARTED)
-GameInProgress = define_message_in(GameState.IN_PROGRESS)
-GameInBetweenRounds = define_message_in(GameState.IN_BETWEEN_ROUNDS)
-GameFinished = define_message_in(GameState.FINISHED)
+GameStateChange: DefineMessageIn[GameStateChangeData] = define_message_in(
+    GameStateMessage.GAME_STATE_CHANGE
+)
 
 MESSAGES: list[DefineMessageIn[Any]] = [
     RegisterPlayer,
-    GameStarted,
-    GameInProgress,
-    GameInBetweenRounds,
-    GameFinished,
+    GameStateChange,
 ]
 
 
@@ -110,7 +110,7 @@ class Game:
             self._connection.add_workshop_output(lines)
 
         def on_log_close(_: str):
-            self._set_state(GameState.CLOSED)
+            self._set_state(GameState.ENDED)
 
             if self._connection:
                 self._connection.cleanup()
@@ -147,7 +147,7 @@ class Game:
         return self._state
 
     def _set_state(self, value: GameState):
-        logger.info('Game state changed to: "%s"', value)
+        logger.info('Game state changed to: "%s"', value.name)
         self._state = value
 
         for plugin in self._plugins:
@@ -205,14 +205,8 @@ class Game:
                 message.data["slot"],
             )
             self._register_player(player)
-        elif is_message_in(message, GameStarted):
-            self._set_state(GameState.STARTED)
-        elif is_message_in(message, GameInProgress):
-            self._set_state(GameState.IN_PROGRESS)
-        elif is_message_in(message, GameInBetweenRounds):
-            self._set_state(GameState.IN_BETWEEN_ROUNDS)
-        elif is_message_in(message, GameFinished):
-            self._set_state(GameState.FINISHED)
+        elif is_message_in(message, GameStateChange):
+            self._set_state(GameState(message.data["state"]))
         else:
             # TODO: info if message wasn't handled
             for plugin in self._plugins:

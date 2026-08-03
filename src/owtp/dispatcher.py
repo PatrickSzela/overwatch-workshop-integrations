@@ -64,12 +64,12 @@ class MessageDispatcher:
         return self._currently_sent_message is not None
 
     def _prepare_message(self, message: MessageOut):
-        if message.name not in self._owtp.registered_supported_messages:
+        if message.name not in self._owtp.registered_msg_def:
             raise RuntimeError(
                 f"Cannot send message {message.name} - the Workshop mode hasn't reported that it supports it!"
             )
 
-        message.prepare(self._owtp.registered_supported_messages[message.name])
+        message.prepare(self._owtp.registered_msg_def[message.name])
 
     def put(self, message: MessageOut):
         self._prepare_message(message)

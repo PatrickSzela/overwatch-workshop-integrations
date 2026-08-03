@@ -118,6 +118,7 @@ class Poll(IPlugin):
         ]
         results_str = " | ".join(results_str)
 
+        logger.info('Poll has ended, "%s" won! Results: %s', winner_str, results_str)
         self.send_message(
             f'Poll has ended, "{winner_str}" won! Results: {results_str}'
         )

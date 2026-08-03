@@ -9,10 +9,10 @@ from ..logging import create_logger
 from ..owtp import (
     OWTP,
     DefineMessageIn,
+    MessageDefinition,
     MessageIn,
     MessageOut,
     ModeInfo,
-    SupportedMessageDefinition,
     define_message_in,
     is_message_in,
 )
@@ -86,8 +86,8 @@ class Game:
             owtp.events.connect_error.on(self._on_connect_error)
             owtp.events.log.on(self._on_log)
             owtp.events.message.on(self._on_message)
-            owtp.events.register_supported_message.on(
-                self._on_register_supported_message
+            owtp.events.register_message_definition.on(
+                self._on_register_message_definition
             )
             owtp.events.send_message_start.on(self._on_send_message_start)
             owtp.events.send_message_finish.on(self._on_send_message_finish)
@@ -191,11 +191,9 @@ class Game:
         for plugin in self._plugins:
             plugin.on_workshop_log(log)
 
-    def _on_register_supported_message(
-        self, structure: SupportedMessageDefinition
-    ):
+    def _on_register_message_definition(self, definition: MessageDefinition):
         for plugin in self._plugins:
-            plugin.on_workshop_register_message(structure)
+            plugin.on_workshop_register_message_definition(definition)
 
     def _on_message(self, message: MessageIn):
         if is_message_in(message, RegisterPlayer):

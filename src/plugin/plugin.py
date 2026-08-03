@@ -9,10 +9,10 @@ if TYPE_CHECKING:
         DefineMessageIn,
         Game,
         GameState,
+        MessageDefinition,
         MessageIn,
         MessageOut,
         ModeInfo,
-        SupportedMessageDefinition,
     )
 
 
@@ -77,10 +77,10 @@ class IPlugin(ABC):
     def on_workshop_log(self, log: str):
         "Called when Workshop mode has output something that isn't a :class:`Message` to the Workshop log file."
 
-    def on_workshop_register_message(
-        self, structure: SupportedMessageDefinition
+    def on_workshop_register_message_definition(
+        self, defintion: MessageDefinition
     ):
-        "Called when a message structure has been registered."
+        "Called when a message definition has been registered."
 
     def on_workshop_message(self, message: MessageIn):
         "Called when a message has been received from the Workshop mode."

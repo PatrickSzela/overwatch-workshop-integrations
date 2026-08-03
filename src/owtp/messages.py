@@ -13,7 +13,7 @@ from .message import (
 )
 
 
-class SupportedMessageDefinition:
+class MessageDefinition:
     "Definition of a message that Workshop mode supports and can receive."
 
     def __init__(
@@ -98,8 +98,8 @@ MESSAGES_OUT: list[DefineMessageOut[Any]] = [
     TransmissionFinishedMessage,
 ]
 
-SUPPORTED_MESSAGE_DEFINITIONS = [
-    SupportedMessageDefinition(
+MESSAGE_DEFINITIONS = [
+    MessageDefinition(
         name=MessageName.CONNECT,
         id=[
             ReservedPackets.CONNECT.value,
@@ -107,7 +107,7 @@ SUPPORTED_MESSAGE_DEFINITIONS = [
             ReservedPackets.CONNECT.value,
         ],
     ),
-    SupportedMessageDefinition(
+    MessageDefinition(
         name=MessageName.TRANSMISSION_FINISHED,
         id=[
             ReservedPackets.CONNECT.value,

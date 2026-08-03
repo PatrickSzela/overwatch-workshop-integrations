@@ -37,8 +37,14 @@ class ConnectionManager:
 
         def on_connected():
             self.connected = True
-            logger.info("Successfully connected with the Workshop mode")
-            self._owtp.events.connect.emit(message.data["mode"])
+            mode = message.data["mode"]
+            logger.info(
+                'Successfully connected with "%s v%s" by "%s"',
+                mode["name"],
+                mode["version"],
+                mode["author"],
+            )
+            self._owtp.events.connect.emit(mode)
 
         def on_not_connected():
             self.connected = False

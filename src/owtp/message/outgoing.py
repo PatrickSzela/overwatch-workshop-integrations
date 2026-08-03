@@ -10,7 +10,7 @@ from .alphabet import encode_string
 from .types import TYPE_MAP, MessageDataType, Vector
 
 if TYPE_CHECKING:
-    from ..messages import SupportedMessageDefinition
+    from ..messages import MessageDefinition
 
 
 class MessageOutState(Enum):
@@ -44,7 +44,7 @@ class MessageOut[T: Mapping[str, Any] = EmptyData]:
 
         self.name = name
         self._data = data
-        self._definition: SupportedMessageDefinition | None = None
+        self._definition: MessageDefinition | None = None
         self._priority = priority
         self._number_of_attempts = number_of_attempts
         self._on_start = on_start
@@ -115,7 +115,7 @@ class MessageOut[T: Mapping[str, Any] = EmptyData]:
 
         return [sum_part, prod_part]
 
-    def prepare(self, definition: SupportedMessageDefinition):
+    def prepare(self, definition: MessageDefinition):
         prepared_data: list[Any] = []
         data_packets: list[int] = []
         packets: list[int] = []

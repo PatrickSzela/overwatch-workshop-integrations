@@ -6,10 +6,10 @@ from src import (
     DefineMessageOut,
     GameState,
     IPlugin,
+    MessageDefinition,
     MessageIn,
     MessageOut,
     ModeInfo,
-    SupportedMessageDefinition,
     create_logger,
     define_message_in,
     define_message_out,
@@ -48,10 +48,10 @@ class Test(IPlugin):
     def on_workshop_log(self, log: str):
         logger.info('Workshop log received: "%s"', log)
 
-    def on_workshop_register_message(
-        self, structure: SupportedMessageDefinition
+    def on_workshop_register_message_definition(
+        self, defintion: MessageDefinition
     ):
-        logger.info("Workshop has registered message: %s", structure)
+        logger.info("Workshop has registered message: %s", defintion)
 
     def on_workshop_message(self, message: MessageIn):
         logger.info("Received message from the Workshop mode: %s", message)

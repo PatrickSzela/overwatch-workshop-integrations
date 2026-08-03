@@ -57,7 +57,7 @@ class OWTP:
         )
         self._log_processor = WorkshopLogProcessor(self)
 
-        for message in messages.SUPPORTED_MESSAGES:
+        for message in messages.SUPPORTED_MESSAGE_DEFINITIONS:
             self._register_supported_message(message)
 
         for message in messages.MESSAGES_IN:
@@ -128,7 +128,7 @@ class OWTP:
             self._connection.connect(message)
         elif is_message_in(message, messages.DisconnectMessage):
             self._connection.disconnect()
-        elif is_message_in(message, messages.SupportsMessage):
+        elif is_message_in(message, messages.RegisterMessageDefinition):
             self._register_supported_message(
                 SupportedMessageDefinition(**message.data)
             )

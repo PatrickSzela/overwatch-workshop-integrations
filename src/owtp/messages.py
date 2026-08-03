@@ -68,8 +68,8 @@ TransmissionFinishedMessage: DefineMessageOut = define_message_out(
     MessageName.TRANSMISSION_FINISHED
 )
 DisconnectMessage: DefineMessageIn = define_message_in(MessageName.DISCONNECT)
-SupportsMessage: DefineMessageIn[SupportsMessageData] = define_message_in(
-    MessageName.SUPPORTS_MESSAGE
+RegisterMessageDefinition: DefineMessageIn[SupportsMessageData] = (
+    define_message_in(MessageName.REGISTER_MESSAGE_DEFINITION)
 )
 ConfirmMessage: DefineMessageIn = define_message_in(MessageName.CONFIRM)
 ErrorMessage: DefineMessageIn[ErrorMessageData] = define_message_in(
@@ -85,7 +85,7 @@ TransmissionNotReadyMessage: DefineMessageIn = define_message_in(
 MESSAGES_IN: list[DefineMessageIn[Any]] = [
     ConnectMessage,
     DisconnectMessage,
-    SupportsMessage,
+    RegisterMessageDefinition,
     ConfirmMessage,
     ErrorMessage,
     TransmissionReadyMessage,
@@ -98,7 +98,7 @@ MESSAGES_OUT: list[DefineMessageOut[Any]] = [
     TransmissionFinishedMessage,
 ]
 
-SUPPORTED_MESSAGES = [
+SUPPORTED_MESSAGE_DEFINITIONS = [
     SupportedMessageDefinition(
         name=MessageName.CONNECT,
         id=[

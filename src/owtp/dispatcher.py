@@ -162,7 +162,7 @@ class MessageDispatcher:
                 and not fail_reason
                 and self._owtp._connection.interactive  # pyright: ignore[reportPrivateUsage] # pylint: disable=W0212
             ):
-                if message.name != "TRANSMISSION_FINISHED":
+                if message.name != MessageName.TRANSMISSION_FINISHED:
                     self.put(messages.TransmissionFinishedMessage())
                 else:
                     self.pause(True)

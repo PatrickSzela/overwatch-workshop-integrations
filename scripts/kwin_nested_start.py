@@ -54,15 +54,11 @@ def main():
         )
 
         print(
-            "\n================================================================================\n"
-        )
-        print(
-            "Nested KWin is running. To run an application inside this nested session use:"
-        )
-        print(
-            f"  WAYLAND_DISPLAY={WAYLAND_SOCKET} DISPLAY=:{XWAYLAND_DISPLAY} <your-app>"
-        )
-        print(
+            "\n================================================================================\n\n"
+            "Nested KWin is running.\n\nTo run an application inside this nested session use:\n"
+            f"  WAYLAND_DISPLAY={WAYLAND_SOCKET} DISPLAY=:{XWAYLAND_DISPLAY} <your-app>\n\n"
+            "To sync clipboard from host to nested session run in separate terminal:\n"
+            f"  wl-paste --watch env WAYLAND_DISPLAY={WAYLAND_SOCKET} wl-copy\n"
             "\n================================================================================\n"
         )
 

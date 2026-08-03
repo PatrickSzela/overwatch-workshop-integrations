@@ -91,6 +91,30 @@ class MessageOut[T: Mapping[str, Any] = EmptyData]:
             case _:
                 pass
 
+    @staticmethod
+    def generate_checksum(data: list[int]):
+        """Based to Fletcher's checksum algorithm. Values going above 112 have higher chance of collision."""
+
+        mod = 113  # prime
+        # coprimes of mod; mixing factors to increase the avalanche effect
+        mix_a = 73
+        mix_b = 59
+
+        def _norm(value: int) -> int:
+            """Return value reduced modulo MOD, never 0."""
+            v = value % mod
+            return v if v != 0 else mod - 1
+
+        sum_part = 0
+        prod_part = 1
+
+        for i, x in enumerate(data):
+            # incorporate the position (i+1) so the order matters
+            sum_part = _norm(sum_part + (x * (i + 1) * mix_a))
+            prod_part = _norm(prod_part * (x + mix_b + i))
+
+        return [sum_part, prod_part]
+
     def prepare(self, definition: SupportedMessageDefinition):
         prepared_data: list[Any] = []
         data_packets: list[int] = []
@@ -118,10 +142,7 @@ class MessageOut[T: Mapping[str, Any] = EmptyData]:
                 json.dumps(prepared_data, separators=(",", ":"))[1:-1]
             )
 
-        checksum_list = definition.id + data_packets
-        checksum = encode_string(
-            f"{sum(checksum_list) + sum(range(1, len(checksum_list) + 1))}"
-        )
+        checksum = MessageOut.generate_checksum(definition.id + data_packets)
 
         # TODO: optional args
         # TODO: automatically convert dict/class to array of key value pairs
